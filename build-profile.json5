@@ -1,6 +1,6 @@
 {
   "app": {
-    "signingConfigs": [],
+  // signingConfigs 已移至本地 build-profile.local.json5
     "products": [
       {
         "name": "default",
