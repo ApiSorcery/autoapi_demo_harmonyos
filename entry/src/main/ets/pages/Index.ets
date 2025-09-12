@@ -1,50 +1,27 @@
-import { UserInfo } from '../types/UserInfo';
+import { fetchUserPage } from '../api/UserApi';
+import { UserInfoDto } from '../types/UserApiTypes';
 
 @Entry
 @Component
 struct Index {
-  private users: UserInfo[] = [
-    {
-      name: 'Wu Song',
-      username: 'songwu',
-      status: 'Enabled',
-      gender: 'Female',
-      email: 'songwu@126.com',
-      address: 'No. 5, Songjia Road',
-      created: '2025-07-02 14:45:05',
-      avatar: 'background'
-    },
-    {
-      name: 'San Song',
-      username: 'songsan',
-      status: 'Enabled',
-      gender: 'Female',
-      email: 'songyi@126.com',
-      address: 'No. 3, Songjia Road',
-      created: '2025-07-02 14:20:55',
-      avatar: 'background'
-    },
-    {
-      name: 'Er Song',
-      username: 'songer',
-      status: 'Disabled',
-      gender: 'Female',
-      email: 'songyi@126.com',
-      address: 'No. 2, Songjia Road',
-      created: '2025-07-02 14:20:33',
-      avatar: 'background'
-    },
-    {
-      name: 'Yi Song',
-      username: 'songyi',
-      status: 'Enabled',
-      gender: 'Female',
-      email: 'songyi@126.com',
-      address: 'No. 1, Songjia Road',
-      created: '2025-07-02 14:20:10',
-      avatar: 'background'
-    }
-  ];
+  @State users: UserInfoDto[] = [];
+  @State total: number = 0;
+  @State refreshing: boolean = false;
+
+  aboutToAppear() {
+    // 页面加载时请求用户分页数据
+    fetchUserPage({
+      pagination: { page: 1, limit: 10 },
+      code: '',
+      name: '',
+      // status: null
+    }, (res) => {
+      if (res && res.results) {
+        this.users = res.results as UserInfoDto[];
+        this.total = res.total;
+      }
+    });
+  }
 
   build() {
     Column() {
@@ -67,63 +44,81 @@ struct Index {
       .backgroundColor('#f3f4f8')
       .flexShrink(0)
 
-      // 用户列表
-      Scroll() {
-        Column() {
-          ForEach(this.users, (user: UserInfo) => {
-            Column() {
-              Row() {
-                Text(`${user.name} - ${user.username}`)
-                  .fontWeight(FontWeight.Bold)
-                  .fontSize(16)
-                Blank()
-                Text(user.status)
-                  .fontColor(user.status === 'Enabled' ? '#007AFF' : '#FF5A5F')
-                  .fontSize(15)
-                  .margin({ right: 10 })
-                // 箭头图标可自定义
-              }
-              .width('100%')
-              .justifyContent(FlexAlign.SpaceBetween)
-              .margin({ bottom: 10 })
-
-              Divider().color('#E0E0E0').height(1)
-              Row() {
-                Image($r(`app.media.${user.avatar}`))
-                  .width(80)
-                  .height(100)
-                  .borderRadius(10)
-                Column() {
-                  Text(`Gender: ${user.gender}`).fontSize(14)
-                  Text(`Email: ${user.email}`).fontSize(14)
-                  Text(`Address: ${user.address}`).fontSize(14)
-                  Text(`Created Time: ${user.created}`).fontSize(13).fontColor('#888')
-                }.margin({ left: 10 })
-                .height(100)
-                .alignItems(HorizontalAlign.Start)
+      // 用户列表，支持下拉刷新
+      Refresh({
+        refreshing: this.refreshing,
+      }) {
+        Scroll() {
+          Column() {
+            ForEach(this.users, (item: UserInfoDto) => {
+              Column() {
+                Row() {
+                  Text(`${item.name} - ${item.code}`)
+                    .fontWeight(FontWeight.Bold)
+                    .fontSize(16)
+                  Blank()
+                  Text(item.status ? 'Enabled' : 'Disabled')
+                    .fontColor(item.status === true ? '#007AFF' : '#FF5A5F')
+                    .fontSize(15)
+                    .margin({ right: 10 })
+                  // 箭头图标可自定义
+                }
+                .width('100%')
                 .justifyContent(FlexAlign.SpaceBetween)
+                .margin({ bottom: 10 })
+
+                Divider().color('#E0E0E0').height(1)
+                Row() {
+                  Image($r(`app.media.${item.avatar}`))
+                    .width(80)
+                    .height(100)
+                    .borderRadius(10)
+                  Column() {
+                    Text(`Gender: ${item.gender}`).fontSize(14)
+                    Text(`Email: ${item.email}`).fontSize(14)
+                    Text(`Address: ${item.address}`).fontSize(14)
+                    Text(`Created Time: ${item.createdAt}`).fontSize(13).fontColor('#888')
+                  }.margin({ left: 10 })
+                  .height(100)
+                  .alignItems(HorizontalAlign.Start)
+                  .justifyContent(FlexAlign.SpaceBetween)
+                }
+                .width('100%')
+
+                .margin({ top: 10 })
+                .justifyContent(FlexAlign.SpaceBetween)
+
               }
-              .width('100%')
-
-              .margin({ top: 10 })
-              .justifyContent(FlexAlign.SpaceBetween)
-
+              .backgroundColor('#fff')
+              .borderRadius(8)
+              .margin({ bottom: 12, left: 8, right: 8 })
+              .padding(10)
+              .shadow({
+                color: '#eee',
+                radius: 4,
+                offsetX: 0,
+                offsetY: 2
+              })
+            }, (user: UserInfoDto) => user.name)
+          }.padding({ top: 12 })
+        }
+        .height('calc(100% - 200px)')
+        .align(Alignment.Top)
+      }.onRefreshing(
+        () => {
+          this.refreshing = true;
+          fetchUserPage({
+            pagination: { page: 1, limit: 10 },
+            code: '',
+            name: '',
+          }, (res) => {
+            if (res && res.results) {
+              this.users = res.results as UserInfoDto[];
+              this.total = res.total;
             }
-            .backgroundColor('#fff')
-            .borderRadius(8)
-            .margin({ bottom:12, left: 8, right: 8 })
-            .padding(10)
-            .shadow({
-              color: '#eee',
-              radius: 4,
-              offsetX: 0,
-              offsetY: 2
-            })
-          }, (user: UserInfo) => user.username)
-        }.padding({top:12})
-      }
-      .height('calc(100% - 200px)')
-      .align(Alignment.Top)
+            this.refreshing = false;
+          });
+        })
 
       // 底部操作栏
       Row() {
