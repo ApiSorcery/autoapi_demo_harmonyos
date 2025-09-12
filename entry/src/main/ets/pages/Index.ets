@@ -14,7 +14,7 @@ struct Index {
       pagination: { page: 1, limit: 10 },
       code: '',
       name: '',
-      // status: null
+      status: undefined
     }, (res) => {
       if (res && res.results) {
         this.users = res.results as UserInfoDto[];
