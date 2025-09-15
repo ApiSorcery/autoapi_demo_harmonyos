@@ -1,5 +1,6 @@
 import { fetchUserPage } from '../api/UserApi';
 import { UserInfoDto } from '../types/UserApiTypes';
+import { formatToCST } from '../utils/DateUtil';
 
 @Entry
 @Component
@@ -72,8 +73,6 @@ struct Index {
       .backgroundColor('#f3f4f8')
       .flexShrink(0)
 
-      // 操作栏高度只能在 build 外部声明，不能在 UI 组件语法块内
-      // ...existing code...
       Refresh({
         refreshing: this.refreshing,
       }) {
@@ -95,7 +94,6 @@ struct Index {
                 .width('100%')
                 .justifyContent(FlexAlign.SpaceBetween)
                 .margin({ bottom: 10 })
-
                 Divider().color('#E0E0E0').height(1)
                 Row() {
                   Image(item.avatar)
@@ -106,7 +104,7 @@ struct Index {
                     Text(`Gender: ${item.gender}`).fontSize(14)
                     Text(`Email: ${item.email}`).fontSize(14)
                     Text(`Address: ${item.address}`).fontSize(14)
-                    Text(`Created Time: ${item.createdAt}`).fontSize(13)
+                    Text(`Created Time: ${formatToCST(item.createdAt)}`).fontSize(13)
                   }.margin({ left: 10 })
                   .height(100)
                   .alignItems(HorizontalAlign.Start)
