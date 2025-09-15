@@ -7,23 +7,49 @@ struct Index {
   @State users: UserInfoDto[] = [];
   @State total: number = 0;
   @State refreshing: boolean = false;
+  @State page: number = 1;
+  @State loadingMore: boolean = false;
+  @State noMore: boolean = false; // 是否没有更多
 
-  aboutToAppear() {
-    // 页面加载时请求用户分页数据
+  private fetchPage(page: number, append: boolean = false) {
     fetchUserPage({
-      pagination: { page: 1, limit: 10 },
+      pagination: { page, limit: 10 },
       code: '',
       name: '',
-      status: undefined
     }, (res) => {
       if (res && res.results) {
-        this.users = res.results as UserInfoDto[];
+        const newList = res.results as UserInfoDto[];
+        if (append) {
+          this.users = this.users.concat(newList);
+        } else {
+          this.users = newList;
+        }
         this.total = res.total;
+        this.noMore = this.users.length >= this.total;
       }
+      this.loadingMore = false;
+      this.refreshing = false;
     });
   }
 
+  private loadMore() {
+    if (this.loadingMore || this.noMore) {
+      return;
+    }
+    this.loadingMore = true;
+    this.page++;
+    this.fetchPage(this.page, true);
+  }
+
+  aboutToAppear() {
+    // 页面加载时请求用户分页数据
+    this.page = 1;
+    this.noMore = false;
+    this.fetchPage(this.page, false);
+  }
+
   build() {
+    // 根容器：直接使用 Column，并通过 safeArea 修饰符（如果版本支持）或顶部 padding 兼容
     Column() {
       // 顶部标题栏
       Row() {
@@ -35,22 +61,25 @@ struct Index {
         Button() {
           // 菜单图标可自定义
         }
-        .width('30px').height('30px').margin({ right: 10 })
+        .width(30).height(30).margin({ right: 10 })
       }
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
       .width('100%') // 设置宽度占满
-      .height('100px')
+      // 使用 vp（逻辑像素）而不是 px，避免在不同密度设备上过小；并增加上下内边距提升视觉高度
+      .height(56)
+      .padding({ top: 12, bottom: 12 })
       .backgroundColor('#f3f4f8')
       .flexShrink(0)
 
-      // 用户列表，支持下拉刷新
+      // 操作栏高度只能在 build 外部声明，不能在 UI 组件语法块内
+      // ...existing code...
       Refresh({
         refreshing: this.refreshing,
       }) {
-        Scroll() {
-          Column() {
-            ForEach(this.users, (item: UserInfoDto) => {
+        List() {
+          ForEach(this.users, (item: UserInfoDto, index: number) => {
+            ListItem() {
               Column() {
                 Row() {
                   Text(`${item.name} - ${item.code}`)
@@ -99,28 +128,53 @@ struct Index {
                 offsetX: 0,
                 offsetY: 2
               })
-            }, (user: UserInfoDto) => user.name)
-          }.padding({ top: 12 })
+            }
+          }, (user: UserInfoDto) => user.name)
+          // 尾部加载/结束指示
+          ListItem() {
+            if (this.loadingMore) {
+              Row() {
+                // 使用 LoadingProgress 代替 Progress() 无参调用，避免“Expected 1 arguments”错误
+                LoadingProgress()
+                  .width(30)
+                  .height(30)
+                Text(' 正在加载...')
+                  .fontSize(14)
+                  .margin({ left: 6 })
+              }.width('100%').justifyContent(FlexAlign.Center).padding(20)
+            } else if (this.noMore && this.users.length > 0) {
+              Text('—— 没有更多数据 ——')
+                .fontSize(12)
+                .fontColor('#999')
+                .width('100%')
+                .textAlign(TextAlign.Center)
+                .padding(20)
+            } else if (this.users.length === 0 && !this.refreshing) {
+              Text('暂无数据')
+                .fontSize(14)
+                .fontColor('#999')
+                .width('100%')
+                .textAlign(TextAlign.Center)
+                .padding(40)
+            }
+          }
         }
-        .height('calc(100% - 200px)')
-        .align(Alignment.Top)
+        // 正常布局下仅需要常规底部间距
+        .padding({ bottom: 16 })
+        .edgeEffect(EdgeEffect.Spring)
+        .onReachEnd(() => {
+          this.loadMore();
+        })
       }.onRefreshing(
         () => {
           this.refreshing = true;
-          fetchUserPage({
-            pagination: { page: 1, limit: 10 },
-            code: '',
-            name: '',
-          }, (res) => {
-            if (res && res.results) {
-              this.users = res.results as UserInfoDto[];
-              this.total = res.total;
-            }
-            this.refreshing = false;
-          });
+          this.page = 1;
+          this.noMore = false;
+          this.fetchPage(this.page, false);
         })
+      .layoutWeight(1) // 占据剩余空间，避免与顶部/底部重叠
 
-      // 底部操作栏
+      // 底部操作栏（自然流布局）
       Row() {
         Blank()
           .flexGrow(1)
@@ -130,15 +184,19 @@ struct Index {
           .fontColor('#fff')
           .borderRadius(0)
           .width(140)
-          .height('100px')
+          .height(56)
       }
       .width('100%')
-      .height('100px')
+      .height(56)
       .alignItems(VerticalAlign.Center)
       .backgroundColor('#FFFFFF')
+      .border({ width: { top: 0.5 }, color: '#E5E5E5' })
     }
+    .position({})
     .backgroundColor('#F7F8FA')
     .height('100%')
     .width('100%')
+    // 由于当前版本不支持 safeArea 修饰符，这里使用固定顶部内边距（如需适配不同设备，可改为动态计算）
+    .padding({ top: 12 })
   }
 }
