@@ -98,7 +98,7 @@ struct Index {
 
                 Divider().color('#E0E0E0').height(1)
                 Row() {
-                  Image($r(`app.media.${item.avatar}`))
+                  Image(item.avatar)
                     .width(80)
                     .height(100)
                     .borderRadius(10)
@@ -106,17 +106,15 @@ struct Index {
                     Text(`Gender: ${item.gender}`).fontSize(14)
                     Text(`Email: ${item.email}`).fontSize(14)
                     Text(`Address: ${item.address}`).fontSize(14)
-                    Text(`Created Time: ${item.createdAt}`).fontSize(13).fontColor('#888')
+                    Text(`Created Time: ${item.createdAt}`).fontSize(13)
                   }.margin({ left: 10 })
                   .height(100)
                   .alignItems(HorizontalAlign.Start)
                   .justifyContent(FlexAlign.SpaceBetween)
                 }
                 .width('100%')
-
                 .margin({ top: 10 })
                 .justifyContent(FlexAlign.SpaceBetween)
-
               }
               .backgroundColor('#fff')
               .borderRadius(8)
