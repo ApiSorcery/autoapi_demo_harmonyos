@@ -59,10 +59,13 @@ struct Index {
         Text('User Management')
           .fontSize(22)
           .fontWeight(FontWeight.Bold)
-        Button() {
-          // 菜单图标可自定义
-        }
-        .width(30).height(30).margin({ right: 10 })
+        Image($r('app.media.search'))
+          .width(30)
+          .height(30)
+          .margin({ right: 10 })
+          .objectFit(ImageFit.Contain)
+          // 如果需要点击行为可启用下行：
+          // .onClick(() => { /* 处理搜索点击 */ })
       }
       .justifyContent(FlexAlign.SpaceBetween)
       .alignItems(VerticalAlign.Center)
