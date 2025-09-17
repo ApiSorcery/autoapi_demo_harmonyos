@@ -187,8 +187,6 @@ struct Index {
               }
             }
           }
-          // 正常布局下仅需要常规底部间距
-          .padding({ bottom: 16 })
           .edgeEffect(EdgeEffect.Spring)
           .onReachEnd(() => {
             this.loadMore();
@@ -224,8 +222,6 @@ struct Index {
       .backgroundColor('#F7F8FA')
       .height('100%')
       .width('100%')
-      // 由于当前版本不支持 safeArea 修饰符，这里使用固定顶部内边距（如需适配不同设备，可改为动态计算）
-      .padding({ top: 12 })
 
       // 搜索抽屉 & 遮罩
       if (this.showSearch) {
