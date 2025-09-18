@@ -2,6 +2,7 @@ import { fetchUserPage } from '../api/UserApi';
 import { UserInfoDto } from '../types/UserApiTypes';
 import { formatToCST } from '../utils/DateUtil';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
+import { UserListItem } from '../components/UserListItem';
 
 @Entry
 @Component
@@ -111,54 +112,7 @@ struct Index {
         }) {
           List() {
             ForEach(this.users, (item: UserInfoDto) => {
-              ListItem() {
-                Column() {
-                  Row() {
-                    Text(`${item.name} - ${item.code}`)
-                      .fontWeight(FontWeight.Bold)
-                      .fontSize(16)
-                    Blank()
-                    Text(item.status ? 'Enabled' : 'Disabled')
-                      .fontColor(item.status === true ? '#007AFF' : '#FF5A5F')
-                      .fontSize(15)
-                      .margin({ right: 10 })
-                    // 箭头图标可自定义
-                  }
-                  .width('100%')
-                  .justifyContent(FlexAlign.SpaceBetween)
-                  .margin({ bottom: 10 })
-
-                  Divider().color('#E0E0E0').height(1)
-                  Row() {
-                    Image(item.avatar)
-                      .width(80)
-                      .height(100)
-                      .borderRadius(10)
-                    Column() {
-                      Text(`Gender: ${item.gender}`).fontSize(14)
-                      Text(`Email: ${item.email}`).fontSize(14)
-                      Text(`Address: ${item.address}`).fontSize(14)
-                      Text(`Created Time: ${formatToCST(item.createdAt)}`).fontSize(13)
-                    }.margin({ left: 10 })
-                    .height(100)
-                    .alignItems(HorizontalAlign.Start)
-                    .justifyContent(FlexAlign.SpaceBetween)
-                  }
-                  .width('100%')
-                  .margin({ top: 10 })
-                  .justifyContent(FlexAlign.SpaceBetween)
-                }
-                .backgroundColor('#fff')
-                .borderRadius(8)
-                .margin({ bottom: 12, left: 8, right: 8 })
-                .padding(10)
-                .shadow({
-                  color: '#eee',
-                  radius: 4,
-                  offsetX: 0,
-                  offsetY: 2
-                })
-              }
+              UserListItem({ user: item })
             }, (user: UserInfoDto) => user.name)
             // 尾部加载/结束指示
             ListItem() {
