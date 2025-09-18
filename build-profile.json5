@@ -1,54 +1,56 @@
 {
-  app: {
-    signingConfigs: [
+  "app": {
+    "products": [
       {
-        name: 'default',
-        type: 'HarmonyOS',
-        material: {
-          certpath: '/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.cer',
-          keyAlias: 'debugKey',
-          keyPassword: '0000001B2841CE07166CCC8850D965EEE52D7B12DB491633C59D58F1D4F19FD9ADB5DB3E226564CA9CC1EF',
-          profile: '/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p7b',
-          signAlg: 'SHA256withECDSA',
-          storeFile: '/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p12',
-          storePassword: '0000001B651A4C100C22A110F491AB22D682B3B3BDF24DCDD5E2C7CFA81CECA911822ABD17EAAAD435C5F3',
-        },
-      },
+        "name": "default",
+        "signingConfig": "default",
+        "targetSdkVersion": "5.0.5(17)",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
     ],
-    products: [
+    "buildModeSet": [
       {
-        name: 'default',
-        signingConfig: 'default',
-        targetSdkVersion: '5.0.5(17)',
-        compatibleSdkVersion: '5.0.0(12)',
-        runtimeOS: 'HarmonyOS',
-        buildOption: {
-          strictMode: {
-            caseSensitiveCheck: true,
-            useNormalizedOHMUrl: true,
-          },
-        },
+        "name": "debug"
       },
+      {
+        "name": "release"
+      }
     ],
-    buildModeSet: [
+    "signingConfigs": [
       {
-        name: 'debug',
-      },
-      {
-        name: 'release',
-      },
-    ],
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B1D47C1C2EB44D6C30F9810D7C1B49DB3A67FC9541C86AC56022C06F57012D49173453F00B2FD8E",
+          "profile": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p12",
+          "storePassword": "0000001B4620477A5E464F6B380C8A86BC64B25E499743BF0BF2C8C57CD8EB81F7BCD4FF34381F0E104D4C"
+        }
+      }
+    ]
   },
-  modules: [
+  "modules": [
     {
-      name: 'entry',
-      srcPath: './entry',
-      targets: [
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
         {
-          name: 'default',
-          applyToProducts: ['default'],
-        },
-      ],
-    },
-  ],
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
 }
