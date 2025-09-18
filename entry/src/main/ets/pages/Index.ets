@@ -138,31 +138,24 @@ struct Index {
 
         // 底部操作栏（右侧操作块）
         Row() {
-          // 右侧 Actions 按钮：自定义内容以加入下拉箭头符号
-          Button() {
-            Row() {
-              Text('Actions')
-                .fontSize(16)
-                .fontColor('#FFFFFF')
-                .fontWeight(FontWeight.Medium)
-                .margin({ right: 4 })
-              // 使用符号代替下拉图标，如需图片可换成 Image 资源
-              Text('▾')
-                .fontSize(32)
-                .fontColor('#FFFFFF')
-                .opacity(0.9)
-                .margin({ left: 6 }) // 视觉上向上移动一点
-            }
-            .alignItems(VerticalAlign.Center)
-            .justifyContent(FlexAlign.Center)
-            .width('100%')
-            .height('100%')
+          // 右侧 Actions 区域（改为普通容器 Row，保留原样式与点击）
+          Row() {
+            Text('Actions')
+              .fontSize(16)
+              .fontColor('#FFFFFF')
+              .fontWeight(FontWeight.Medium)
+              .margin({ right: 4 })
+            Text('▾')
+              .fontSize(32)
+              .fontColor('#FFFFFF')
+              .opacity(0.9)
+              .margin({ left: 6 })
           }
-          .backgroundColor('#233A6B')
-          .borderRadius(0)
-          .width(140)
-          .padding(0) // 去除内部默认留白，确保高度完全贴合
+          .alignItems(VerticalAlign.Center)
+          .justifyContent(FlexAlign.Center)
           .height('100%')
+          .padding({ left: 16, right: 12 })
+          .backgroundColor('#233A6B')
           .onClick(() => {
             this.showActions = true;
           })
