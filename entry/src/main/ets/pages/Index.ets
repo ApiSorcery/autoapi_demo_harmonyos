@@ -3,6 +3,7 @@ import { UserInfoDto } from '../types/UserApiTypes';
 import { formatToCST } from '../utils/DateUtil';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
+import { ListFooterStatus } from '../components/ListFooterStatus';
 
 @Entry
 @Component
@@ -114,34 +115,13 @@ struct Index {
             ForEach(this.users, (item: UserInfoDto) => {
               UserListItem({ user: item })
             }, (user: UserInfoDto) => user.name)
-            // 尾部加载/结束指示
-            ListItem() {
-              if (this.loadingMore) {
-                Row() {
-                  // 使用 LoadingProgress 代替 Progress() 无参调用，避免“Expected 1 arguments”错误
-                  LoadingProgress()
-                    .width(30)
-                    .height(30)
-                  Text(' 正在加载...')
-                    .fontSize(14)
-                    .margin({ left: 6 })
-                }.width('100%').justifyContent(FlexAlign.Center).padding(20)
-              } else if (this.noMore && this.users.length > 0) {
-                Text('—— 没有更多数据 ——')
-                  .fontSize(12)
-                  .fontColor('#999')
-                  .width('100%')
-                  .textAlign(TextAlign.Center)
-                  .padding(20)
-              } else if (this.users.length === 0 && !this.refreshing) {
-                Text('暂无数据')
-                  .fontSize(14)
-                  .fontColor('#999')
-                  .width('100%')
-                  .textAlign(TextAlign.Center)
-                  .padding(40)
-              }
-            }
+            // 尾部加载/结束/空状态
+            ListFooterStatus({
+              loadingMore: this.loadingMore,
+              noMore: this.noMore,
+              dataCount: this.users.length,
+              refreshing: this.refreshing
+            })
           }
           .edgeEffect(EdgeEffect.Spring)
           .onReachEnd(() => {
