@@ -1,4 +1,5 @@
 import { fetchUserPage } from '../api/UserApi';
+import router from '@ohos.router';
 import { UserInfoDto } from '../types/UserApiTypes';
 import { formatToCST } from '../utils/DateUtil';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
@@ -202,8 +203,8 @@ struct Index {
               .fontColor('#333')
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
-                // TODO: 接入添加用户逻辑
                 this.showActions = false;
+                router.pushUrl({ url: 'pages/AddUser' });
               })
             Divider().color('#E8E8EC').height(1)
             // 选项：Export
