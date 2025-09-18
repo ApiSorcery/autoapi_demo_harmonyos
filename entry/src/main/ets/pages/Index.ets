@@ -19,6 +19,8 @@ struct Index {
   @State queryStatus: boolean | undefined = undefined; // 实际传给接口的布尔状态
   // 状态选项文案
   private statusOptions: string[] = ['All', 'Enabled', 'Disabled'];
+  // 底部 Actions 弹层显示控制
+  @State showActions: boolean = false;
 
   private fetchPage(page: number, append: boolean = false) {
     fetchUserPage({
@@ -200,20 +202,40 @@ struct Index {
           })
         .layoutWeight(1) // 占据剩余空间，避免与顶部/底部重叠
 
-        // 底部操作栏（自然流布局）
+        // 底部操作栏（右侧操作块）
         Row() {
-          Blank()
-            .flexGrow(1)
-          Button('Actions')
-            .fontSize(16)
-            .backgroundColor('#233A6B')
-            .fontColor('#fff')
-            .borderRadius(0)
-            .width(140)
-            .height(56)
+          // 右侧 Actions 按钮：自定义内容以加入下拉箭头符号
+          Button() {
+            Row() {
+              Text('Actions')
+                .fontSize(16)
+                .fontColor('#FFFFFF')
+                .fontWeight(FontWeight.Medium)
+                .margin({ right: 4 })
+              // 使用符号代替下拉图标，如需图片可换成 Image 资源
+              Text('▾')
+                .fontSize(32)
+                .fontColor('#FFFFFF')
+                .opacity(0.9)
+                .margin({ left: 6 }) // 视觉上向上移动一点
+            }
+            .alignItems(VerticalAlign.Center)
+            .justifyContent(FlexAlign.Center)
+            .width('100%')
+            .height('100%')
+          }
+          .backgroundColor('#233A6B')
+          .borderRadius(0)
+          .width(140)
+          .padding(0) // 去除内部默认留白，确保高度完全贴合
+          .height('100%')
+          .onClick(() => {
+            this.showActions = true;
+          })
         }
         .width('100%')
-        .height(56)
+        .height(48) // 调整高度更贴近设计稿
+        .justifyContent(FlexAlign.End)
         .alignItems(VerticalAlign.Center)
         .backgroundColor('#FFFFFF')
         .border({ width: { top: 0.5 }, color: '#E5E5E5' })
@@ -361,6 +383,62 @@ struct Index {
         .width('100%')
         .height('100%')
         .backgroundColor('#00000055')
+      }
+
+      // 底部 Actions 弹出面板
+      if (this.showActions) {
+        // 遮罩
+        Column() {
+          Blank()
+            .layoutWeight(1)
+            .onClick(() => {
+              this.showActions = false;
+            })
+          // 弹出主体
+          Column() {
+            // 选项：Add User
+            Text('Add User')
+              .width('100%')
+              .textAlign(TextAlign.Center)
+              .fontSize(16)
+              .fontColor('#333')
+              .padding({ top: 18, bottom: 18 })
+              .onClick(() => {
+                // TODO: 接入添加用户逻辑
+                this.showActions = false;
+              })
+            Divider().color('#E8E8EC').height(1)
+            // 选项：Export
+            Text('Export')
+              .width('100%')
+              .textAlign(TextAlign.Center)
+              .fontSize(16)
+              .fontColor('#333')
+              .padding({ top: 18, bottom: 18 })
+              .onClick(() => {
+                // TODO: 接入导出逻辑
+                this.showActions = false;
+              })
+          }
+          .backgroundColor('#F9F9FC')
+          .borderRadius({
+            topLeft: 24,
+            topRight: 24,
+            bottomLeft: 0,
+            bottomRight: 0
+          })
+          .shadow({
+            color: '#00000022',
+            radius: 12,
+            offsetX: 0,
+            offsetY: -2
+          })
+        }
+        .height('100%')
+        .width('100%')
+        .backgroundColor('#00000044')
+        // 移除 HorizontalAlign.Stretch（版本不支持），保持默认拉伸
+        .justifyContent(FlexAlign.End)
       }
     }
   }
