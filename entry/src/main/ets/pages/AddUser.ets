@@ -48,8 +48,9 @@ struct AddUser {
         .padding({ left: 12 })
         .backgroundColor('#F7F8FA')
 
-        // 表单区域
-        Column() {
+        // 表单区域（可滚动）
+        Scroll() {
+          Column() {
           // Code
           Text('* Code:').fontColor('#333').fontSize(14).margin({ bottom: 4 })
           TextInput({ placeholder: 'Please enter' })
@@ -144,13 +145,13 @@ struct AddUser {
           }
 
           Blank().height(40)
+          }
+          .padding({ left: 20, right: 20, top: 12 })
+          .width('100%')
+          .alignItems(HorizontalAlign.Start)
         }
-        .padding({ left: 20, right: 20, top: 12 })
-        .layoutWeight(1)
+        .layoutWeight(1) // 占据剩余空间
         .width('100%')
-        .alignItems(HorizontalAlign.Start)
-        .justifyContent(FlexAlign.Start)
-        .layoutWeight(1) // 占据剩余空间，避免与顶部/底部重叠
 
         // 底部按钮
         Row() {
@@ -241,7 +242,6 @@ struct AddUser {
         .height('100%')
         .width('100%')
         .backgroundColor('#00000044')
-        // 移除 HorizontalAlign.Stretch（版本不支持），保持默认拉伸
         .justifyContent(FlexAlign.End)
       }
 
