@@ -5,7 +5,7 @@
         "name": "default",
         "signingConfig": "default",
         "targetSdkVersion": "5.0.5(17)",
-        "compatibleSdkVersion": "5.0.0(12)",
+        "compatibleSdkVersion": "5.0.5(17)",
         "runtimeOS": "HarmonyOS",
         "buildOption": {
           "strictMode": {
@@ -30,11 +30,11 @@
         "material": {
           "certpath": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B1D47C1C2EB44D6C30F9810D7C1B49DB3A67FC9541C86AC56022C06F57012D49173453F00B2FD8E",
+          "keyPassword": "0000001BADCDE5B385611BCEF3C83CC04DE105A915E8FDFDE1D9585B681343AE1D0D63597E390DB629F094",
           "profile": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "/Users/markhe/.ohos/config/default_autoapi_demo_harmonyos_3dwBFTi3yXHvhc2xGyoi0MuFVNloQDVmT_TopZ_Nxmw=.p12",
-          "storePassword": "0000001B4620477A5E464F6B380C8A86BC64B25E499743BF0BF2C8C57CD8EB81F7BCD4FF34381F0E104D4C"
+          "storePassword": "0000001B8337CF1F453D90691CFDCFCD5D818774961F116D337386A0C614B655A754076D7DB7519B899050"
         }
       }
     ]

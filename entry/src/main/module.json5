@@ -47,7 +47,20 @@
       }
     ],
     "requestPermissions": [
-      { "name": "ohos.permission.INTERNET" }
+      {
+        "name": "ohos.permission.INTERNET"
+      },
+      {
+        "name": "ohos.permission.READ_IMAGEVIDEO",
+        // 可选，说明权限用途
+        "reason": "$string:REASON_FOR_READ_IMAGEVIDEO",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "always"
+        }
+      }
     ]
   }
 }

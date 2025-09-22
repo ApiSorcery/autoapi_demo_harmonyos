@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "label"
+    },
+    {
+      "name": "REASON_FOR_READ_IMAGEVIDEO",
+      "value": "读取相册以更新用户头像"
     }
   ]
 }
