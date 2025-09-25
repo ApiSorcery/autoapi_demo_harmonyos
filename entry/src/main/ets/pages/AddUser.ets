@@ -4,6 +4,9 @@ import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import common from '@ohos.app.ability.common';
 import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
+// 文件上传API
+import * as UserApi from '../api/UserApi';
+import fs from '@ohos.file.fs';
 
 @Entry
 @Component
@@ -17,6 +20,9 @@ struct AddUser {
   @State avatar: string = '';
   // 底部 Actions 弹层显示控制
   @State showActions: boolean = false;
+  // 头像上传状态
+  @State isUploadingAvatar: boolean = false;
+  @State avatarUploadError: string = '';
 
   /**
    * 申请读图片权限（根据不同版本可能需要 READ_MEDIA / READ_IMAGEVIDEO 权限）
@@ -66,10 +72,40 @@ struct AddUser {
       if (uriArr && uriArr.length > 0) {
         this.avatar = uriArr[0];
         console.info('选择头像成功: ' + this.avatar);
+        // 上传图像到服务器
+        this.uploadAvatar(this.avatar);
       }
     } catch (e) {
       console.error('pickAvatar error', JSON.stringify(e));
     }
+  }
+
+    /**
+   * 上传头像到服务器
+   * @param uri 图片 URI
+   */
+  private uploadAvatar(uri: string) {
+    if (!uri) {
+      return;
+    }
+
+    this.isUploadingAvatar = true;
+    this.avatarUploadError = '';
+    
+    // 直接使用文件路径上传
+    UserApi.uploadFile(uri, '用户头像', (url: string | null) => {
+      this.isUploadingAvatar = false;
+      
+      if (url) {
+        // 上传成功，更新avatar为服务器返回的URL
+        this.avatar = url;
+        console.info('头像上传成功:', url);
+      } else {
+        // 上传失败，保持本地URI用于显示，但记录错误
+        this.avatarUploadError = '头像上传失败，请重试';
+        console.error('头像上传失败');
+      }
+    });
   }
 
   /**
@@ -77,6 +113,7 @@ struct AddUser {
    */
   private clearAvatar() {
     this.avatar = '';
+    this.avatarUploadError = '';
   }
 
   private goBack() {
@@ -199,6 +236,29 @@ struct AddUser {
 
             // Avatar 占位
             Text('Avatar:').fontColor('#333').fontSize(14).margin({ bottom: 8 })
+            
+            // 上传状态提示
+            if (this.isUploadingAvatar) {
+              Row() {
+                LoadingProgress()
+                  .width(16)
+                  .height(16)
+                  .margin({ right: 8 })
+                Text('正在上传头像...')
+                  .fontSize(12)
+                  .fontColor('#666')
+              }
+              .margin({ bottom: 8 })
+            }
+            
+            // 错误提示
+            if (this.avatarUploadError) {
+              Text(this.avatarUploadError)
+                .fontSize(12)
+                .fontColor('#ff4444')
+                .margin({ bottom: 8 })
+            }
+            
             Row() {
               // 显示已选择图片或占位图
               if (this.avatar) {
@@ -210,10 +270,15 @@ struct AddUser {
                     .height(100)
                     .border({ width: 1, color: '#DDD', radius: 8 })
                     .objectFit(ImageFit.Cover)
-                    .onClick(() => this.pickAvatar())
+                    .onClick(() => {
+                      if (!this.isUploadingAvatar) {
+                        this.pickAvatar();
+                      }
+                    })
                     .onError((err) => {
                       console.error('加载头像失败:', JSON.stringify(err));
                     })
+                    .opacity(this.isUploadingAvatar ? 0.6 : 1.0)
                   // 右上角清除按钮
                   Text('✕')
                     .fontSize(10)
@@ -248,7 +313,12 @@ struct AddUser {
                 .alignItems(HorizontalAlign.Center)
                 .backgroundColor('#F0F0F3')
                 .border({ width: 1, color: '#DDD', radius: 8 })
-                .onClick(() => this.pickAvatar())
+                .onClick(() => {
+                  if (!this.isUploadingAvatar) {
+                    this.pickAvatar();
+                  }
+                })
+                .opacity(this.isUploadingAvatar ? 0.6 : 1.0)
               }
             }
 
