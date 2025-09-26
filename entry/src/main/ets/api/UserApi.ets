@@ -4,6 +4,19 @@ import fs from '@ohos.file.fs';
 import { BusinessError } from '@ohos.base';
 
 /**
+ * 辅助函数：将字符串转换为Uint8Array
+ * @param str 要转换的字符串
+ * @returns Uint8Array
+ */
+function stringToUint8Array(str: string): Uint8Array {
+  const bytes = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    bytes[i] = str.charCodeAt(i) & 0xFF;
+  }
+  return bytes;
+}
+
+/**
  * 用户分页查询接口
  * @param dto 查询参数
  * @param callback 回调函数，返回结果或 null
@@ -60,6 +73,28 @@ export async function uploadFile(filePath: string, description?: string,
   try {
     // 从文件路径中提取文件名
     const fileName: string = filePath.substring(filePath.lastIndexOf('/') + 1) || 'upload.jpg';
+    
+    // 根据文件扩展名确定Content-Type
+    const getContentType = (fileName: string): string => {
+      const ext = fileName.toLowerCase().substring(fileName.lastIndexOf('.') + 1);
+      switch (ext) {
+        case 'jpg':
+        case 'jpeg':
+          return 'image/jpeg';
+        case 'png':
+          return 'image/png';
+        case 'gif':
+          return 'image/gif';
+        case 'webp':
+          return 'image/webp';
+        case 'bmp':
+          return 'image/bmp';
+        default:
+          return 'image/jpeg'; // 默认
+      }
+    };
+    
+    const contentType = getContentType(fileName);
 
     // 异步处理文件读取和上传
     try {
@@ -97,32 +132,49 @@ export async function uploadFile(filePath: string, description?: string,
 
         // 构建multipart/form-data格式的请求体
         const boundary: string = '----WebKitFormBoundary' + Math.random().toString(36).substr(2, 16);
-        let body: string = '';
-
-        // 添加文件字段
-        body += `--${boundary}\r\n`;
-        body += `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n`;
-        body += `Content-Type: image/jpeg\r\n\r\n`;
-
-        // 将ArrayBuffer转换为二进制字符串
-        const uint8Array: Uint8Array = new Uint8Array(initialBuffer, 0, bytesRead);
-        let binaryString: string = '';
-        for (let i = 0; i < uint8Array.length; i++) {
-          binaryString += String.fromCharCode(uint8Array[i]);
-        }
-
-        body += binaryString;
-        body += '\r\n';
-
-        // 添加描述字段（如果有）
+        
+        // 准备multipart数据的各个部分
+        const boundaryBytes = stringToUint8Array(`--${boundary}\r\n`);
+        const headerBytes = stringToUint8Array(
+          `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n` +
+          `Content-Type: ${contentType}\r\n\r\n`
+        );
+        const fileData = new Uint8Array(initialBuffer, 0, bytesRead);
+        const endBoundaryPart1 = stringToUint8Array('\r\n');
+        
+        let descriptionBytes = new Uint8Array(0);
         if (description) {
-          body += `--${boundary}\r\n`;
-          body += `Content-Disposition: form-data; name="description"\r\n\r\n`;
-          body += description;
-          body += '\r\n';
+          descriptionBytes = stringToUint8Array(
+            `--${boundary}\r\n` +
+            `Content-Disposition: form-data; name="description"\r\n\r\n` +
+            description + '\r\n'
+          );
         }
-
-        body += `--${boundary}--\r\n`;
+        
+        const finalBoundary = stringToUint8Array(`--${boundary}--\r\n`);
+        
+        // 计算总长度
+        const totalLength = boundaryBytes.length + headerBytes.length + fileData.length + 
+                           endBoundaryPart1.length + descriptionBytes.length + finalBoundary.length;
+        
+        // 创建完整的请求体ArrayBuffer
+        const bodyBuffer = new ArrayBuffer(totalLength);
+        const bodyView = new Uint8Array(bodyBuffer);
+        
+        let offset = 0;
+        bodyView.set(boundaryBytes, offset);
+        offset += boundaryBytes.length;
+        bodyView.set(headerBytes, offset);
+        offset += headerBytes.length;
+        bodyView.set(fileData, offset);
+        offset += fileData.length;
+        bodyView.set(endBoundaryPart1, offset);
+        offset += endBoundaryPart1.length;
+        if (descriptionBytes.length > 0) {
+          bodyView.set(descriptionBytes, offset);
+          offset += descriptionBytes.length;
+        }
+        bodyView.set(finalBoundary, offset);
 
         // 发送请求
         httpRequest.request(
@@ -132,7 +184,7 @@ export async function uploadFile(filePath: string, description?: string,
             header: {
               'Content-Type': `multipart/form-data; boundary=${boundary}`
             },
-            extraData: body
+            extraData: bodyBuffer
           },
           (err: BusinessError | undefined, data: http.HttpResponse): void => {
             if (!err && data) {
