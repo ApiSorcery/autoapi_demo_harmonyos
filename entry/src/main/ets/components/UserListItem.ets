@@ -3,7 +3,7 @@ import { formatToCST } from '../utils/DateUtil';
 
 @Component
 export struct UserListItem {
-  @Prop user!: UserInfoDto; // 由父组件传入，使用 definite assignment 断言避免未初始化错误
+  @Prop user: UserInfoDto = {} as UserInfoDto; // 由父组件传入
 
   build() {
     ListItem() {

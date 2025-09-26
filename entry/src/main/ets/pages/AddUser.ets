@@ -6,7 +6,6 @@ import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
 // 文件上传API
 import * as UserApi from '../api/UserApi';
-import fs from '@ohos.file.fs';
 
 @Entry
 @Component
