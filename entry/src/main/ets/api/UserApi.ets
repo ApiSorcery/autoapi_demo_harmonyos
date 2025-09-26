@@ -2,19 +2,8 @@ import http from '@ohos.net.http';
 import { ResultData, UserPageQueryDto, GetUserPagedResponse } from '../types/UserApiTypes';
 import fs from '@ohos.file.fs';
 import { BusinessError } from '@ohos.base';
-
-/**
- * 辅助函数：将字符串转换为Uint8Array
- * @param str 要转换的字符串
- * @returns Uint8Array
- */
-function stringToUint8Array(str: string): Uint8Array {
-  const bytes = new Uint8Array(str.length);
-  for (let i = 0; i < str.length; i++) {
-    bytes[i] = str.charCodeAt(i) & 0xFF;
-  }
-  return bytes;
-}
+import stringUtil from '../utils/StringUtil';
+import fileUtil from '../utils/FileUtil';
 
 /**
  * 用户分页查询接口
@@ -74,27 +63,8 @@ export async function uploadFile(filePath: string, description?: string,
     // 从文件路径中提取文件名
     const fileName: string = filePath.substring(filePath.lastIndexOf('/') + 1) || 'upload.jpg';
     
-    // 根据文件扩展名确定Content-Type
-    const getContentType = (fileName: string): string => {
-      const ext = fileName.toLowerCase().substring(fileName.lastIndexOf('.') + 1);
-      switch (ext) {
-        case 'jpg':
-        case 'jpeg':
-          return 'image/jpeg';
-        case 'png':
-          return 'image/png';
-        case 'gif':
-          return 'image/gif';
-        case 'webp':
-          return 'image/webp';
-        case 'bmp':
-          return 'image/bmp';
-        default:
-          return 'image/jpeg'; // 默认
-      }
-    };
-    
-    const contentType = getContentType(fileName);
+    // 获取文件Content-Type
+    const contentType = fileUtil.getContentType(fileName);
 
     // 异步处理文件读取和上传
     try {
@@ -134,24 +104,24 @@ export async function uploadFile(filePath: string, description?: string,
         const boundary: string = '----WebKitFormBoundary' + Math.random().toString(36).substr(2, 16);
         
         // 准备multipart数据的各个部分
-        const boundaryBytes = stringToUint8Array(`--${boundary}\r\n`);
-        const headerBytes = stringToUint8Array(
+        const boundaryBytes = stringUtil.stringToUint8Array(`--${boundary}\r\n`);
+        const headerBytes = stringUtil.stringToUint8Array(
           `Content-Disposition: form-data; name="file"; filename="${fileName}"\r\n` +
           `Content-Type: ${contentType}\r\n\r\n`
         );
         const fileData = new Uint8Array(initialBuffer, 0, bytesRead);
-        const endBoundaryPart1 = stringToUint8Array('\r\n');
+        const endBoundaryPart1 = stringUtil.stringToUint8Array('\r\n');
         
         let descriptionBytes = new Uint8Array(0);
         if (description) {
-          descriptionBytes = stringToUint8Array(
+          descriptionBytes = stringUtil.stringToUint8Array(
             `--${boundary}\r\n` +
             `Content-Disposition: form-data; name="description"\r\n\r\n` +
             description + '\r\n'
           );
         }
         
-        const finalBoundary = stringToUint8Array(`--${boundary}--\r\n`);
+        const finalBoundary = stringUtil.stringToUint8Array(`--${boundary}--\r\n`);
         
         // 计算总长度
         const totalLength = boundaryBytes.length + headerBytes.length + fileData.length + 

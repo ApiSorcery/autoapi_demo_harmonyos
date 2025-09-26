@@ -1,5 +1,5 @@
 import { UserInfoDto } from '../types/UserApiTypes';
-import { formatToCST } from '../utils/DateUtil';
+import dateUtil from '../utils/DateUtil';
 
 @Component
 export struct UserListItem {
@@ -32,7 +32,7 @@ export struct UserListItem {
             Text(`Gender: ${this.user.gender}`).fontSize(14)
             Text(`Email: ${this.user.email}`).fontSize(14)
             Text(`Address: ${this.user.address}`).fontSize(14)
-            Text(`Created Time: ${formatToCST(this.user.createdAt)}`).fontSize(13)
+            Text(`Created Time: ${dateUtil.formatToCST(this.user.createdAt)}`).fontSize(13)
           }.margin({ left: 10 })
           .height(100)
           .alignItems(HorizontalAlign.Start)

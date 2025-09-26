@@ -1,7 +1,6 @@
 import { fetchUserPage } from '../api/UserApi';
 import router from '@ohos.router';
 import { UserInfoDto } from '../types/UserApiTypes';
-import { formatToCST } from '../utils/DateUtil';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
 import { ListFooterStatus } from '../components/ListFooterStatus';
