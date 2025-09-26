@@ -66,18 +66,30 @@ export async function uploadFile(filePath: string, description?: string,
       console.info('开始处理文件上传，文件路径:', filePath);
       const file: fs.File = await fs.open(filePath, fs.OpenMode.READ_ONLY);
       try {
-        // 使用较小的缓冲区先尝试读取
-        const initialBuffer: ArrayBuffer = new ArrayBuffer(1024 * 1024); // 1MB初始缓冲区
+        // 限制文件大小为500KB以避免413错误
+        const maxFileSize: number = 500 * 1024; // 500KB
+        const initialBuffer: ArrayBuffer = new ArrayBuffer(maxFileSize);
 
         // 读取文件内容
         const bytesRead: number = await fs.read(file.fd, initialBuffer);
-        console.info('实际读取字节数:', bytesRead);
+        const fileSizeKB = Math.round(bytesRead / 1024);
+        console.info('实际读取字节数:', bytesRead, '(' + fileSizeKB + 'KB)');
 
         // 关闭文件
         await fs.close(file.fd);
 
         if (bytesRead === 0) {
           console.error('文件为空或读取失败');
+          callback?.(null);
+          httpRequest.destroy();
+          return;
+        }
+
+        // 检查文件大小是否超过限制
+        if (bytesRead >= maxFileSize) {
+          const maxSizeKB = Math.round(maxFileSize / 1024);
+          const actualSizeKB = Math.round(bytesRead / 1024);
+          console.error('文件过大，超过限制大小', maxSizeKB, 'KB，实际读取了', actualSizeKB, 'KB');
           callback?.(null);
           httpRequest.destroy();
           return;
@@ -128,6 +140,22 @@ export async function uploadFile(filePath: string, description?: string,
                 let result: string = '';
 
                 if (typeof data.result === 'string') {
+                  // 检查是否是HTML错误响应（如413错误）
+                  if (data.result.includes('<html>') || data.result.includes('413 Request Entity Too Large')) {
+                    console.error('服务器返回413错误 - 文件过大:', data.result);
+                    callback?.(null);
+                    httpRequest.destroy();
+                    return;
+                  }
+                  
+                  // 检查其他常见的HTML错误
+                  if (data.result.includes('<html>') && data.result.includes('<title>')) {
+                    console.error('服务器返回HTML错误页面:', data.result);
+                    callback?.(null);
+                    httpRequest.destroy();
+                    return;
+                  }
+
                   // 尝试解析JSON响应
                   try {
                     const resp: Record<string, string | number | boolean | Object> =
@@ -149,7 +177,7 @@ export async function uploadFile(filePath: string, description?: string,
                   result = String(data.result);
                 }
 
-                if (result && result.length > 0) {
+                if (result && result.length > 0 && !result.includes('<html>')) {
                   console.info('文件上传成功，URL:', result);
                   callback?.(result);
                 } else {
