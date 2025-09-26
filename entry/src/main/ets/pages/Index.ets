@@ -203,7 +203,7 @@ struct Index {
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
                 this.showActions = false;
-                router.pushUrl({ url: 'pages/AddUser' });
+                router.pushUrl({ url: 'pages/UserDetail' });
               })
             Divider().color('#E8E8EC').height(1)
             // 选项：Export

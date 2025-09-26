@@ -9,7 +9,7 @@ import * as UserApi from '../api/UserApi';
 
 @Entry
 @Component
-struct AddUser {
+struct UserDetail {
   @State code: string = '';
   @State name: string = '';
   @State email: string = '';
