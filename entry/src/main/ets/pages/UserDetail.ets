@@ -6,6 +6,7 @@ import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
 // 文件上传API
 import * as UserApi from '../api/UserApi';
+import fileUtil, { FileReadFailReason, FileReadResult } from '../utils/FileUtil';
 
 @Entry
 @Component
@@ -34,7 +35,7 @@ struct UserDetail {
       // 使用本地声明的 Permissions 类型，避免使用 any
       const perms: Permissions[] = [
         'ohos.permission.READ_IMAGEVIDEO'
-      // 若在不同 API 版本需要扩展：'ohos.permission.READ_MEDIA'
+        // 若在不同 API 版本需要扩展：'ohos.permission.READ_MEDIA'
       ];
       const grantStatus = await atManager.requestPermissionsFromUser(context, perms);
       if (!grantStatus || !grantStatus.authResults) {
@@ -71,30 +72,53 @@ struct UserDetail {
       if (uriArr && uriArr.length > 0) {
         this.avatar = uriArr[0];
         console.info('选择头像成功: ' + this.avatar);
+        // 图片校验（最大500KB）
+        const maxSize = 500 * 1024;
+        const validation: FileReadResult = await fileUtil.readFileWithinLimit(this.avatar, maxSize);
+        if (!validation.ok) {
+          switch (validation.reason) {
+            case FileReadFailReason.EMPTY_FILE:
+              this.avatarUploadError = '选择的图片文件为空';
+              break;
+            case FileReadFailReason.FILE_TOO_LARGE:
+              this.avatarUploadError = `图片过大，最大允许 ${Math.round(maxSize / 1024)}KB`;
+              break;
+            case FileReadFailReason.READ_ERROR:
+            default:
+              this.avatarUploadError = '图片读取失败';
+          }
+          console.error('头像文件校验失败:', validation.reason);
+          return; // 不上传
+        }
+        this.avatarUploadError = '';
         // 上传图像到服务器
-        this.uploadAvatar(this.avatar);
+  this.uploadAvatar(this.avatar, validation.data!, validation.bytesRead);
       }
     } catch (e) {
       console.error('pickAvatar error', JSON.stringify(e));
     }
   }
 
-    /**
+  /**
    * 上传头像到服务器
    * @param uri 图片 URI
    */
-  private uploadAvatar(uri: string) {
+  private uploadAvatar(uri: string, preData?: Uint8Array, preBytesRead?: number) {
     if (!uri) {
       return;
     }
 
     this.isUploadingAvatar = true;
     this.avatarUploadError = '';
-    
+
     // 直接使用文件路径上传
-    UserApi.uploadFile(uri, '用户头像', (imageId: string | null) => {
+    UserApi.uploadFile({
+      filePath: uri,
+      description: '用户头像',
+      preRead: preData && typeof preBytesRead === 'number' ? { data: preData, bytesRead: preBytesRead } : undefined,
+      callback: (imageId: string | null) => {
       this.isUploadingAvatar = false;
-      
+
       if (imageId) {
         // 上传成功，更新avatar为服务器返回的URL
         this.avatar = `https://www.apisorcery.com/demo-api/file/${imageId}`;
@@ -104,6 +128,7 @@ struct UserDetail {
         this.avatarUploadError = '头像上传失败，请重试';
         console.error('头像上传失败');
       }
+    }
     });
   }
 
@@ -235,7 +260,7 @@ struct UserDetail {
 
             // Avatar 占位
             Text('Avatar:').fontColor('#333').fontSize(14).margin({ bottom: 8 })
-            
+
             // 上传状态提示
             if (this.isUploadingAvatar) {
               Row() {
@@ -249,7 +274,7 @@ struct UserDetail {
               }
               .margin({ bottom: 8 })
             }
-            
+
             // 错误提示
             if (this.avatarUploadError) {
               Text(this.avatarUploadError)
@@ -257,7 +282,7 @@ struct UserDetail {
                 .fontColor('#ff4444')
                 .margin({ bottom: 8 })
             }
-            
+
             Row() {
               // 显示已选择图片或占位图
               if (this.avatar) {
