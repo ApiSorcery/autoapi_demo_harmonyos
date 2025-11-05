@@ -1,6 +1,6 @@
-import { fetchUserPage } from '../apis/auto/demo/UserApi';
+import * as ApiUser from '../apis/auto/demo/ApiUser';
 import router from '@ohos.router';
-import { GetUserPagedResponse, UserInfoDto } from '../types/UserApiTypes';
+import { GetUserPagedResponse, UserInfoDto, UserPageQueryDto } from '../types/UserApiTypes';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
 import { ListFooterStatus } from '../components/ListFooterStatus';
@@ -25,12 +25,12 @@ struct Index {
   @State showActions: boolean = false;
 
   private async fetchPage(page: number, append: boolean = false) {
-    const res: GetUserPagedResponse = await fetchUserPage({
+    const res: GetUserPagedResponse = await ApiUser.getUserPaged({
       pagination: { page, limit: 10 },
       code: this.queryCode ? this.queryCode : undefined,
       name: this.queryName ? this.queryName : undefined,
       status: this.queryStatus,
-    });
+    } as UserPageQueryDto);
     if (res && res.results) {
       const newList = res.results as UserInfoDto[];
       if (append) {

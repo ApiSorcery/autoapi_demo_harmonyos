@@ -6,10 +6,11 @@ import common from '@ohos.app.ability.common';
 import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
 // 文件上传API
-import * as UserApi from '../apis/auto/demo/UserApi';
-import * as FileApi from '../apis/auto/demo/FileApi';
+import * as ApiUser from '../apis/auto/demo/ApiUser';
+import * as ApiFile from '../apis/auto/demo/ApiFile';
 import fileUtil, { FileReadFailReason, FileReadResult } from '../utils/FileUtil';
 import { FormData } from '@ohos/axios';
+import { UploadFileRequest } from '../apis/auto/demo/model';
 
 @Entry
 @Component
@@ -134,10 +135,15 @@ struct UserDetail {
     // 获取文件Content-Type
     const contentType = fileUtil.getContentType(fileName);
     // 组装FormData
-    let formData = new FormData();
-    formData.append('file', file, { filename: fileName, type: contentType });
-    formData.append('description', '用户头像')
-    const imageId = await FileApi.uploadFile(formData);
+    // let formData = new FormData();
+    // formData.append('file', file, { filename: fileName, type: contentType });
+    // formData.append('description', '用户头像')
+    let req = new UploadFileRequest({
+      data: file,
+      fileName: fileName,
+      type: contentType
+    }, '用户头像')
+    const imageId = await ApiFile.uploadFile(req);
     this.isUploadingAvatar = false;
     if (imageId) {
       // 上传成功，更新avatar为服务器返回的URL
