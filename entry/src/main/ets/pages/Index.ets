@@ -1,4 +1,4 @@
-import { fetchUserPage } from '../api/auto/demo/UserApi';
+import { fetchUserPage } from '../apis/auto/demo/UserApi';
 import router from '@ohos.router';
 import { GetUserPagedResponse, UserInfoDto } from '../types/UserApiTypes';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';

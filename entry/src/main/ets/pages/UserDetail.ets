@@ -6,8 +6,8 @@ import common from '@ohos.app.ability.common';
 import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
 // 文件上传API
-import * as UserApi from '../api/auto/demo/UserApi';
-import * as FileApi from '../api/auto/demo/FileApi';
+import * as UserApi from '../apis/auto/demo/UserApi';
+import * as FileApi from '../apis/auto/demo/FileApi';
 import fileUtil, { FileReadFailReason, FileReadResult } from '../utils/FileUtil';
 import { FormData } from '@ohos/axios';
 
