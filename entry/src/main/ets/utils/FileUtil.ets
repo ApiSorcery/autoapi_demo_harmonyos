@@ -3,8 +3,7 @@ import fs from '@ohos.file.fs';
 // 文件读取失败原因枚举
 export enum FileReadFailReason {
   EMPTY_FILE = 'EMPTY_FILE',
-  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
-  READ_ERROR = 'READ_ERROR'
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE'
 }
 
 // 文件读取结果类型别名，统一复用
@@ -12,7 +11,7 @@ export enum FileReadFailReason {
 export interface FileReadResult {
   ok: boolean;
   bytesRead: number;
-  data: Uint8Array | null;
+  data: ArrayBuffer | null;
   reason?: FileReadFailReason;
 }
 
@@ -67,59 +66,33 @@ class FileUtil {
 
   /**
    * 读取文件并做大小校验（最大值包含上限前的所有字节，超出或等于上限视为失败）
-   * @param filePath 文件路径
+   * @param file 文件
    * @param maxFileSizeBytes 最大允许字节数（例如 500 * 1024）
    * @returns Promise 包含校验结果
    */
-  static async readFileWithinLimit(filePath: string, maxFileSizeBytes: number): Promise<FileReadResult> {
-    let file: fs.File | undefined;
-    try {
-      file = await fs.open(filePath, fs.OpenMode.READ_ONLY);
-      const buffer = new ArrayBuffer(maxFileSizeBytes);
-      const bytesRead: number = await fs.read(file.fd, buffer);
-      const sizeKB = Math.round(bytesRead / 1024);
-      console.info('实际读取字节数:', bytesRead, '(' + sizeKB + 'KB)');
-
-      // 主动关闭文件
-      await fs.close(file.fd);
-      file = undefined;
-
-      if (bytesRead === 0) {
-        return {
-          ok: false,
-          bytesRead,
-          data: null,
-          reason: FileReadFailReason.EMPTY_FILE
-        };
-      }
-      if (bytesRead >= maxFileSizeBytes) {
-        return {
-          ok: false,
-          bytesRead,
-          data: null,
-          reason: FileReadFailReason.FILE_TOO_LARGE
-        };
-      }
-
-      const dataView = new Uint8Array(buffer, 0, bytesRead);
-      return { ok: true, bytesRead, data: dataView };
-    } catch (err) {
-      console.error('读取文件失败:', err);
+  static async readFileWithinLimit(file: fs.File, maxFileSizeBytes: number): Promise<FileReadResult> {
+    const buffer = new ArrayBuffer(maxFileSizeBytes);
+    const bytesRead: number = await fs.read(file.fd, buffer);
+    const sizeKB = Math.round(bytesRead / 1024);
+    console.info('实际读取字节数:', bytesRead, '(' + sizeKB + 'KB)');
+    if (bytesRead === 0) {
       return {
         ok: false,
-        bytesRead: 0,
+        bytesRead,
         data: null,
-        reason: FileReadFailReason.READ_ERROR
+        reason: FileReadFailReason.EMPTY_FILE
       };
-    } finally {
-      if (file) {
-        try {
-          await fs.close(file.fd);
-        } catch (closeErr) {
-          console.warn('关闭文件失败:', closeErr);
-        }
-      }
     }
+    if (bytesRead >= maxFileSizeBytes) {
+      return {
+        ok: false,
+        bytesRead,
+        data: null,
+        reason: FileReadFailReason.FILE_TOO_LARGE
+      };
+    }
+
+    return { ok: true, bytesRead, data: buffer };
   }
 }
 

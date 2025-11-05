@@ -1,6 +1,6 @@
-import { fetchUserPage } from '../api/UserApi';
+import { fetchUserPage } from '../api/auto/demo/UserApi';
 import router from '@ohos.router';
-import { UserInfoDto } from '../types/UserApiTypes';
+import { GetUserPagedResponse, UserInfoDto } from '../types/UserApiTypes';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
 import { ListFooterStatus } from '../components/ListFooterStatus';
@@ -24,26 +24,25 @@ struct Index {
   // 底部 Actions 弹层显示控制
   @State showActions: boolean = false;
 
-  private fetchPage(page: number, append: boolean = false) {
-    fetchUserPage({
+  private async fetchPage(page: number, append: boolean = false) {
+    const res: GetUserPagedResponse = await fetchUserPage({
       pagination: { page, limit: 10 },
       code: this.queryCode ? this.queryCode : undefined,
       name: this.queryName ? this.queryName : undefined,
       status: this.queryStatus,
-    }, (res) => {
-      if (res && res.results) {
-        const newList = res.results as UserInfoDto[];
-        if (append) {
-          this.users = this.users.concat(newList);
-        } else {
-          this.users = newList;
-        }
-        this.total = res.total;
-        this.noMore = this.users.length >= this.total;
-      }
-      this.loadingMore = false;
-      this.refreshing = false;
     });
+    if (res && res.results) {
+      const newList = res.results as UserInfoDto[];
+      if (append) {
+        this.users = this.users.concat(newList);
+      } else {
+        this.users = newList;
+      }
+      this.total = res.total;
+      this.noMore = this.users.length >= this.total;
+    }
+    this.loadingMore = false;
+    this.refreshing = false;
   }
 
   private loadMore() {

@@ -5,6 +5,8 @@
   "main": "",
   "author": "",
   "license": "",
-  "dependencies": {}
+  "dependencies": {
+    "@ohos/axios": "^2.2.6" // 版本号可根据需要调整，若构建时报版本不存在，可改用具体可用版本
+  }
 }
 
