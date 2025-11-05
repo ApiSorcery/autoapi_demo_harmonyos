@@ -129,15 +129,19 @@ struct UserDetail {
   private async uploadAvatar(file: ArrayBuffer) {
     this.isUploadingAvatar = true;
     this.avatarUploadError = '';
-
+    // 从文件路径中提取文件名
+    const fileName: string = this.avatar.substring(this.avatar.lastIndexOf('/') + 1) || 'upload.jpg';
+    // 获取文件Content-Type
+    const contentType = fileUtil.getContentType(fileName);
+    // 组装FormData
     let formData = new FormData();
-    formData.append('file', file);
+    formData.append('file', file, { filename: fileName, type: contentType });
     formData.append('description', '用户头像')
     const imageId = await FileApi.uploadFile(formData);
     this.isUploadingAvatar = false;
     if (imageId) {
       // 上传成功，更新avatar为服务器返回的URL
-      this.avatar = `https://www.apisorcery.com/demo-api/file2/${imageId}`;
+      this.avatar = `https://www.apisorcery.com/demo-api/file/${imageId}`;
       console.info('头像上传成功:', this.avatar);
     } else {
       // 上传失败，保持本地URI用于显示，但记录错误
