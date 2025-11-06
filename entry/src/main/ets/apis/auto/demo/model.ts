@@ -1,16 +1,16 @@
 import { AxiosProgressEvent, FormData } from "@ohos/axios";
 
 /** Binary data response type */
-// export interface BlobResp {
-//   /** File content */
-//   data: Blob;
-//
-//   /** File type */
-//   type: String;
-//
-//   /** File name */
-//   name: String;
-// }
+export interface BlobResp {
+  /** File content */
+  data: ArrayBuffer;
+
+  /** File type */
+  type: string;
+
+  /** File name */
+  name: string;
+}
 
 export interface File {
   data: ArrayBuffer,

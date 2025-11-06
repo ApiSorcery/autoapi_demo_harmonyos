@@ -14,11 +14,11 @@ export const addUser = base.createJsonRequest<Model.UserAddRequestDto,number>((d
 /**
  * Batch export users (Excel)
  */
-// export const exportUsers = base.createDownloadRequest<Model.ExportUsersRequest>((req) => ({
-//   url: `/user/export`,
-//   method: 'GET',
-//   params: {'code': req.code,'name': req.name,'email': req.email},
-// }))
+export const exportUsers = base.createDownloadRequest<Model.ExportUsersRequest>((req) => ({
+  url: `/user/export`,
+  method: 'GET',
+  params: {'code': req.code,'name': req.name,'email': req.email},
+}))
 
 /**
  * Get single user
