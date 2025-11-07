@@ -13,9 +13,14 @@ export interface BlobResp {
 }
 
 export interface File {
-  data: ArrayBuffer,
-  fileName: string,
-  type: string
+  /** File content */
+  data: ArrayBuffer;
+
+  /** File type */
+  type: string;
+
+  /** File name */
+  fileName: string;
 }
 
 export interface TFormData {
@@ -67,22 +72,24 @@ export interface GetFileRequest {
 /** Upload file request parameters */
 export class UploadFileRequest implements TFormData {
   /** File to upload */
-  file: File;
+  file?: File;
+
   /** File description (optional) */
   description?: string;
+
   /** Upload progress callback function */
   onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
 
-  constructor(file: File, description?: string, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) {
+  constructor(file?: File, description?: string, onUploadProgress?: (progressEvent: AxiosProgressEvent) => void) {
     this.file = file;
     this.description = description;
     this.onUploadProgress = onUploadProgress;
   }
 
   toFormData(): FormData {
-    let formData = new FormData();
-    formData.append('file', this.file.data, { filename: this.file.fileName, type: this.file.type });
-    formData.append('description', this.description)
+    const formData = new FormData();
+    formData.append('file', this.file?.data, { filename: this.file?.fileName, type: this.file?.type });
+    formData.append('description', this.description);
     return formData;
   }
 }
@@ -90,6 +97,7 @@ export class UploadFileRequest implements TFormData {
 /** Query user list with pagination response parameters */
 export interface GetUserPagedResponse {
   results: Array<UserInfoDto>;
+
   total: number;
 }
 
