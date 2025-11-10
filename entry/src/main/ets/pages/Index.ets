@@ -355,7 +355,12 @@ struct Index {
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
                 this.showActions = false;
-                router.pushUrl({ url: 'pages/UserDetail' });
+                router.pushUrl({ 
+                  url: 'pages/UserDetail',
+                  params: {
+                    isEdit: false
+                  }
+                });
               })
             Divider().color('#E8E8EC').height(1)
             // 选项：Export

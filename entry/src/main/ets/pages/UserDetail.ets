@@ -5,16 +5,21 @@ import photoAccessHelper from '@ohos.file.photoAccessHelper';
 import common from '@ohos.app.ability.common';
 import abilityAccessCtrl from '@ohos.abilityAccessCtrl';
 import { Permissions } from '@kit.AbilityKit';
+import promptAction from '@ohos.promptAction';
 // 文件上传API
 import * as ApiUser from '../apis/auto/demo/ApiUser';
 import * as ApiFile from '../apis/auto/demo/ApiFile';
 import fileUtil, { FileReadFailReason, FileReadResult } from '../utils/FileUtil';
 import { FormData } from '@ohos/axios';
-import { UploadFileRequest } from '../apis/auto/demo/model';
+import { UploadFileRequest, UserAddRequestDto, UserModifyRequestDto } from '../apis/auto/demo/model';
 
 @Entry
 @Component
 struct UserDetail {
+  // 页面模式：是否为编辑模式
+  @State isEditMode: boolean = false;
+  @State userId: number = 0;
+  // 表单字段
   @State code: string = '';
   @State name: string = '';
   @State email: string = '';
@@ -27,6 +32,46 @@ struct UserDetail {
   // 头像上传状态
   @State isUploadingAvatar: boolean = false;
   @State avatarUploadError: string = '';
+  // 保存状态
+  @State isSaving: boolean = false;
+  // 验证错误信息
+  @State codeError: string = '';
+  @State nameError: string = '';
+  @State emailError: string = '';
+
+  aboutToAppear() {
+    // 从路由参数中获取用户信息
+    const params = router.getParams() as Record<string, Object>;
+    if (params) {
+      this.isEditMode = params['isEdit'] as boolean || false;
+      this.userId = params['userId'] as number || 0;
+      
+      if (this.isEditMode && this.userId) {
+        this.loadUserData();
+      }
+    }
+  }
+
+  /**
+   * 加载用户数据（编辑模式）
+   */
+  private async loadUserData() {
+    try {
+      const userInfo = await ApiUser.getUserOne({ id: this.userId });
+      if (userInfo) {
+        this.code = userInfo.code || '';
+        this.name = userInfo.name || '';
+        this.email = userInfo.email || '';
+        this.genderIndex = userInfo.gender || 0;
+        this.status = userInfo.status !== undefined ? userInfo.status : true;
+        this.address = userInfo.address || '';
+        this.avatar = userInfo.avatar || '';
+      }
+    } catch (e) {
+      console.error('加载用户数据失败:', JSON.stringify(e));
+      promptAction.showToast({ message: '加载用户数据失败' });
+    }
+  }
 
   /**
    * 申请读图片权限（根据不同版本可能需要 READ_MEDIA / READ_IMAGEVIDEO 权限）
@@ -168,18 +213,107 @@ struct UserDetail {
     router.back();
   }
 
-  private saveUser() {
-    // TODO: 接入真实创建用户 API
-    console.info('保存用户占位:', JSON.stringify({
-      code: this.code,
-      name: this.name,
-      email: this.email,
-      gender: this.genderIndex,
-      status: this.status,
-      address: this.address,
-      avatar: this.avatar
-    }));
-    router.back();
+  /**
+   * 验证邮箱格式
+   */
+  private validateEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  /**
+   * 验证表单数据
+   */
+  private validateForm(): boolean {
+    let isValid = true;
+
+    // 验证 Code
+    if (!this.code || this.code.trim() === '') {
+      this.codeError = 'Code 不能为空';
+      isValid = false;
+    } else {
+      this.codeError = '';
+    }
+
+    // 验证 Name
+    if (!this.name || this.name.trim() === '') {
+      this.nameError = 'Name 不能为空';
+      isValid = false;
+    } else {
+      this.nameError = '';
+    }
+
+    // 验证 Email
+    if (!this.email || this.email.trim() === '') {
+      this.emailError = 'Email 不能为空';
+      isValid = false;
+    } else if (!this.validateEmail(this.email)) {
+      this.emailError = 'Email 格式不正确';
+      isValid = false;
+    } else {
+      this.emailError = '';
+    }
+
+    return isValid;
+  }
+
+  private async saveUser() {
+    // 验证表单
+    if (!this.validateForm()) {
+      return;
+    }
+
+    // 如果正在上传头像，提示用户等待
+    if (this.isUploadingAvatar) {
+      promptAction.showToast({ message: '请等待头像上传完成' });
+      return;
+    }
+
+    this.isSaving = true;
+
+    try {
+      if (this.isEditMode) {
+        // 编辑用户
+        const request: UserModifyRequestDto = {
+          id: this.userId,
+          code: this.code,
+          name: this.name,
+          email: this.email,
+          gender: this.genderIndex,
+          status: this.status,
+          address: this.address,
+          avatar: this.avatar
+        };
+        await ApiUser.modifyUser(request);
+        promptAction.showToast({ message: '用户修改成功' });
+      } else {
+        // 新增用户
+        const request: UserAddRequestDto = {
+          code: this.code,
+          name: this.name,
+          email: this.email,
+          gender: this.genderIndex,
+          status: this.status,
+          address: this.address,
+          avatar: this.avatar
+        };
+        const userId = await ApiUser.addUser(request);
+        if (userId) {
+          promptAction.showToast({ message: '用户创建成功' });
+        }
+      }
+      // 保存成功后返回列表页
+      setTimeout(() => {
+        router.back();
+      }, 500);
+    } catch (e) {
+      console.error('保存用户失败:', JSON.stringify(e));
+      promptAction.showToast({ 
+        message: this.isEditMode ? '修改用户失败' : '创建用户失败' 
+      });
+    } finally {
+      this.isSaving = false;
+    }
   }
 
   build() {
@@ -191,7 +325,9 @@ struct UserDetail {
             .width(24).height(24)
             .margin({ right: 8 })
             .onClick(() => this.goBack())
-          Text('Add User').fontSize(20).fontWeight(FontWeight.Medium)
+          Text(this.isEditMode ? 'Edit User' : 'Add User')
+            .fontSize(20)
+            .fontWeight(FontWeight.Medium)
         }
         .width('100%')
         .height(48)
@@ -204,42 +340,59 @@ struct UserDetail {
           Column() {
             // Code
             Text('* Code:').fontColor('#333').fontSize(14).margin({ bottom: 4 })
-            TextInput({ placeholder: 'Please enter' })
+            TextInput({ placeholder: 'Please enter', text: this.code })
               .width('100%')
               .height(40)
               .border({ width: 1, color: '#DDD', radius: 6 })
               .padding({ left: 12, right: 12 })
-              .onChange((v: string) => this.code = v)
-            if (!this.code) {
-              Text('Cannot be empty').fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
+              .onChange((v: string) => {
+                this.code = v;
+                if (v && v.trim() !== '') {
+                  this.codeError = '';
+                }
+              })
+              .enabled(!this.isEditMode) // 编辑模式下 Code 不可修改
+            if (this.codeError) {
+              Text(this.codeError).fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
             } else {
               Blank().height(8)
             }
 
             // Name
             Text('* Name:').fontColor('#333').fontSize(14).margin({ bottom: 4 })
-            TextInput({ placeholder: 'Please enter' })
+            TextInput({ placeholder: 'Please enter', text: this.name })
               .width('100%')
               .height(40)
               .border({ width: 1, color: '#DDD', radius: 6 })
               .padding({ left: 12, right: 12 })
-              .onChange((v: string) => this.name = v)
-            if (!this.name) {
-              Text('Cannot be empty').fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
+              .onChange((v: string) => {
+                this.name = v;
+                if (v && v.trim() !== '') {
+                  this.nameError = '';
+                }
+              })
+            if (this.nameError) {
+              Text(this.nameError).fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
             } else {
               Blank().height(8)
             }
 
             // Email
             Text('* Email:').fontColor('#333').fontSize(14).margin({ bottom: 4 })
-            TextInput({ placeholder: 'Please enter' })
+            TextInput({ placeholder: 'Please enter', text: this.email })
               .width('100%')
               .height(40)
               .border({ width: 1, color: '#DDD', radius: 6 })
               .padding({ left: 12, right: 12 })
-              .onChange((v: string) => this.email = v)
-            if (!this.email) {
-              Text('Cannot be empty').fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
+              .type(InputType.Email)
+              .onChange((v: string) => {
+                this.email = v;
+                if (v && v.trim() !== '') {
+                  this.emailError = '';
+                }
+              })
+            if (this.emailError) {
+              Text(this.emailError).fontColor('#c00').fontSize(10).margin({ top: 4, bottom: 8 })
             } else {
               Blank().height(8)
             }
@@ -426,17 +579,28 @@ struct UserDetail {
           // 弹出主体
           Column() {
             // 选项：Add User
-            Text('Save')
-              .width('100%')
-              .textAlign(TextAlign.Center)
-              .fontSize(16)
-              .fontColor('#233A6B')
-              .backgroundColor('#E8EAF2')
-              .padding({ top: 18, bottom: 18 })
-              .onClick(() => {
+            Row() {
+              if (this.isSaving) {
+                LoadingProgress()
+                  .width(16)
+                  .height(16)
+                  .margin({ right: 8 })
+              }
+              Text(this.isSaving ? 'Saving...' : 'Save')
+                .textAlign(TextAlign.Center)
+                .fontSize(16)
+                .fontColor('#233A6B')
+            }
+            .width('100%')
+            .justifyContent(FlexAlign.Center)
+            .backgroundColor('#E8EAF2')
+            .padding({ top: 18, bottom: 18 })
+            .onClick(() => {
+              if (!this.isSaving) {
                 this.showActions = false;
                 this.saveUser();
-              })
+              }
+            })
             Divider().color('#E8E8EC').height(1)
             // 选项：Export
             Text('Cancel')

@@ -39,6 +39,13 @@ export function registerRequestInterceptors(instance: AxiosInstance) {
     }
     console.info(`=== 【${requestId}】 请求发送 ===`);
     
+    // @ohos/axios 不支持 PATCH 方法，需要转换为 POST + X-HTTP-Method-Override
+    if (config.method?.toUpperCase() === 'PATCH') {
+      console.info(`【${requestId}】检测到 PATCH 方法，转换为 POST + X-HTTP-Method-Override`);
+      config.method = 'POST';
+      config.headers['X-HTTP-Method-Override'] = 'PATCH';
+    }
+    
     // 示例：追加统一 Header（按需开启）
     // config.headers = { ...(config.headers || {}), 'X-App-Version': '1.0.0' };
     // TODO: 可在此添加 token，例如：
