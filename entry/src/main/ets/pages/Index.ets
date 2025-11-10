@@ -1,9 +1,15 @@
 import * as ApiUser from '../apis/auto/demo/ApiUser';
 import router from '@ohos.router';
+import fs from '@ohos.file.fs';
+import common from '@ohos.app.ability.common';
+import promptAction from '@ohos.promptAction';
+import { fileUri } from '@kit.CoreFileKit';
+import { BusinessError } from '@kit.BasicServicesKit';
 import { GetUserPagedResponse, UserInfoDto, UserPageQueryDto } from '../types/UserApiTypes';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
 import { ListFooterStatus } from '../components/ListFooterStatus';
+import { Want } from '@kit.AbilityKit';
 
 @Entry
 @Component
@@ -23,6 +29,11 @@ struct Index {
   // 搜索组件内已包含状态选项文案
   // 底部 Actions 弹层显示控制
   @State showActions: boolean = false;
+  // 导出状态
+  @State exporting: boolean = false; // 是否正在导出
+  // 最近导出的文件信息（用于打开文件）
+  private exportedFilePath: string = '';
+  private exportedFileName: string = '';
 
   private async fetchPage(page: number, append: boolean = false) {
     const res: GetUserPagedResponse = await ApiUser.getUserPaged({
@@ -75,6 +86,148 @@ struct Index {
     this.queryName = '';
     this.statusIndex = 0;
     this.queryStatus = undefined;
+  }
+
+  /**
+   * 导出当前查询条件下的用户列表为 Excel 文件
+   * 调用后端接口获取二进制并写入到应用文件目录
+   */
+  private async handleExport() {
+    try {
+      this.exporting = true;
+      // 触发下载请求；后端若为空字符串则忽略筛选
+      const resp = await ApiUser.exportUsers({
+        code: this.queryCode || '',
+        name: this.queryName || '',
+        email: '' // 当前界面没有 email 筛选,传空即可
+      });
+
+      if (!resp || !resp.data) {
+        console.warn('导出失败：响应为空');
+        promptAction.showToast({ message: '导出失败' });
+        return;
+      }
+
+      // 获取上下文文件目录；若不可用使用标准内部存储路径兜底
+      const context = getContext(this) as common.UIAbilityContext;
+      const baseDir = (context && (context.filesDir || context.cacheDir)) ?? '/data/storage/el2/base/files';
+      const safeName = (resp.name || 'users.xlsx').replace(/[\\\/]/g, '_');
+      const filePath = baseDir + '/' + safeName;
+
+      let file: fs.File | undefined;
+      try {
+        file = await fs.open(filePath, fs.OpenMode.CREATE | fs.OpenMode.WRITE_ONLY);
+        await fs.write(file.fd, resp.data);
+        console.info('用户数据已导出: ' + filePath);
+        this.exportedFilePath = filePath;
+        this.exportedFileName = safeName;
+        
+        // 显示成功对话框，提供打开文件选项
+        promptAction.showDialog({
+          title: '导出成功',
+          message: `文件已保存至:\n${filePath}`,
+          buttons: [
+            { text: '关闭', color: '#666666' },
+            { text: '打开文件', color: '#007AFF' }
+          ]
+        }).then((result) => {
+          if (result.index === 1) {
+            // 用户点击"打开文件"
+            this.openExportedFile();
+          }
+        }).catch((err: BusinessError) => {
+          console.error('对话框错误:', JSON.stringify(err));
+        });
+      } catch (writeErr) {
+        console.error('写入导出文件失败:', JSON.stringify(writeErr));
+        promptAction.showToast({ message: '文件写入失败' });
+      } finally {
+        if (file) {
+          try {
+            await fs.close(file.fd);
+          } catch { /* ignore */
+          }
+          file = undefined;
+        }
+      }
+    } catch (e) {
+      console.error('导出异常:', JSON.stringify(e));
+      promptAction.showToast({ message: '导出异常' });
+    } finally {
+      this.showActions = false;
+      this.exporting = false;
+    }
+  }
+
+  /**
+   * 打开最近导出的文件
+   */
+  private async openExportedFile() {
+    if (!this.exportedFilePath) {
+      promptAction.showToast({ message: '没有可打开的文件' });
+      return;
+    }
+
+    try {
+      const context = getContext(this) as common.UIAbilityContext;
+      const uri = fileUri.getUriFromPath(this.exportedFilePath);
+
+      // 尝试方式1: 使用具体的 Excel MIME type
+      let want: Want = {
+        action: 'ohos.want.action.viewData',
+        uri: uri,
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      };
+
+      try {
+        await context.startAbility(want);
+        console.info('文件打开成功: ' + uri);
+        return;
+      } catch (firstErr) {
+        console.warn('第一次打开失败，尝试通用方式:', JSON.stringify(firstErr));
+
+        // 尝试方式2: 使用通用文件类型
+        want = {
+          action: 'ohos.want.action.viewData',
+          uri: uri,
+          type: 'application/octet-stream'
+        };
+
+        try {
+          await context.startAbility(want);
+          console.info('使用通用方式打开成功: ' + uri);
+          return;
+        } catch (secondErr) {
+          console.warn('第二次打开失败，尝试不指定类型:', JSON.stringify(secondErr));
+
+          // 尝试方式3: 不指定 type，让系统自动识别
+          want = {
+            action: 'ohos.want.action.viewData',
+            uri: uri
+          };
+
+          await context.startAbility(want);
+          console.info('使用系统识别方式打开成功: ' + uri);
+        }
+      }
+    } catch (err) {
+      const errCode = (err as BusinessError)?.code || 0;
+      console.error('打开文件失败:', JSON.stringify(err));
+
+      let message = '打开文件失败';
+      if (errCode === 16000050) {
+        message = '未找到可打开此文件的应用，请安装 WPS 或其他办公软件';
+      } else if (errCode === 16000001) {
+        message = '文件路径无效';
+      } else {
+        message = `打开文件失败 (错误码: ${errCode})`;
+      }
+
+      promptAction.showToast({
+        message: message,
+        duration: 3000
+      });
+    }
   }
 
   build() {
@@ -213,8 +366,7 @@ struct Index {
               .fontColor('#333')
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
-                // TODO: 接入导出逻辑
-                this.showActions = false;
+                this.handleExport();
               })
           }
           .backgroundColor('#F9F9FC')
@@ -237,6 +389,19 @@ struct Index {
         // 移除 HorizontalAlign.Stretch（版本不支持），保持默认拉伸
         .justifyContent(FlexAlign.End)
       }
+      // 导出加载遮罩
+      if (this.exporting) {
+        Column() {
+          LoadingProgress().width(48).height(48).margin({ bottom: 12 })
+          Text('正在导出...').fontSize(14).fontColor('#FFF')
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#00000055')
+      }
+
     }
   }
 }
