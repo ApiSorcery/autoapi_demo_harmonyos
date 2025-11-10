@@ -1,9 +1,20 @@
 import { UserInfoDto } from '../types/UserApiTypes';
 import dateUtil from '../utils/DateUtil';
+import router from '@ohos.router';
 
 @Component
 export struct UserListItem {
   @Prop user: UserInfoDto = {} as UserInfoDto; // 由父组件传入
+
+  private navigateToDetail() {
+    router.pushUrl({
+      url: 'pages/UserDetail',
+      params: {
+        userId: this.user.id,
+        isEdit: true
+      }
+    });
+  }
 
   build() {
     ListItem() {
@@ -51,6 +62,9 @@ export struct UserListItem {
         radius: 4,
         offsetX: 0,
         offsetY: 2
+      })
+      .onClick(() => {
+        this.navigateToDetail();
       })
     }
   }
