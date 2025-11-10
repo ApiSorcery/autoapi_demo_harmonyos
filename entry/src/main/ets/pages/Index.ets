@@ -34,6 +34,8 @@ struct Index {
   // 最近导出的文件信息（用于打开文件）
   private exportedFilePath: string = '';
   private exportedFileName: string = '';
+  // 删除状态
+  @State deleting: boolean = false; // 是否正在删除
 
   private async fetchPage(page: number, append: boolean = false) {
     const res: GetUserPagedResponse = await ApiUser.getUserPaged({
@@ -121,7 +123,7 @@ struct Index {
         console.info('用户数据已导出: ' + filePath);
         this.exportedFilePath = filePath;
         this.exportedFileName = safeName;
-        
+
         // 显示成功对话框，提供打开文件选项
         promptAction.showDialog({
           title: '导出成功',
@@ -230,6 +232,49 @@ struct Index {
     }
   }
 
+  /**
+   * 删除用户
+   */
+  private async handleDelete(user: UserInfoDto) {
+    try {
+      // 显示确认对话框
+      const result = await promptAction.showDialog({
+        title: '确认删除',
+        message: `确定要删除用户 "${user.name}" 吗？此操作不可恢复。`,
+        buttons: [
+          { text: '取消', color: '#666666' },
+          { text: '删除', color: '#FF3B30' }
+        ]
+      });
+
+      // 用户点击删除
+      if (result.index === 1) {
+        this.deleting = true;
+        try {
+          await ApiUser.removeUser({ id: user.id });
+          promptAction.showToast({ message: '删除成功' });
+
+          // 从列表中移除该用户
+          this.users = this.users.filter(u => u.id !== user.id);
+          this.total = this.total - 1;
+
+          // 如果当前页没有数据了，且不是第一页，则重新加载上一页
+          if (this.users.length === 0 && this.page > 1) {
+            this.page--;
+            this.fetchPage(this.page, false);
+          }
+        } catch (err) {
+          console.error('删除用户失败:', JSON.stringify(err));
+          promptAction.showToast({ message: '删除失败，请稍后重试' });
+        } finally {
+          this.deleting = false;
+        }
+      }
+    } catch (err) {
+      console.error('显示对话框失败:', JSON.stringify(err));
+    }
+  }
+
   build() {
     // 使用 Stack 以便在最上层叠加搜索抽屉
     Stack() {
@@ -265,7 +310,10 @@ struct Index {
         }) {
           List() {
             ForEach(this.users, (item: UserInfoDto) => {
-              UserListItem({ user: item })
+              UserListItem({
+                user: item,
+                onDelete: (user: UserInfoDto): Promise<void> => this.handleDelete(user)
+              })
             }, (user: UserInfoDto) => user.name)
             // 尾部加载/结束/空状态
             ListFooterStatus({
@@ -355,7 +403,7 @@ struct Index {
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
                 this.showActions = false;
-                router.pushUrl({ 
+                router.pushUrl({
                   url: 'pages/UserDetail',
                   params: {
                     isEdit: false
@@ -399,6 +447,19 @@ struct Index {
         Column() {
           LoadingProgress().width(48).height(48).margin({ bottom: 12 })
           Text('正在导出...').fontSize(14).fontColor('#FFF')
+        }
+        .width('100%')
+        .height('100%')
+        .justifyContent(FlexAlign.Center)
+        .alignItems(HorizontalAlign.Center)
+        .backgroundColor('#00000055')
+      }
+
+      // 删除加载遮罩
+      if (this.deleting) {
+        Column() {
+          LoadingProgress().width(48).height(48).margin({ bottom: 12 })
+          Text('正在删除...').fontSize(14).fontColor('#FFF')
         }
         .width('100%')
         .height('100%')

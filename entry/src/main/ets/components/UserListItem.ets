@@ -5,6 +5,7 @@ import router from '@ohos.router';
 @Component
 export struct UserListItem {
   @Prop user: UserInfoDto = {} as UserInfoDto; // 由父组件传入
+  onDelete?: (user: UserInfoDto) => void; // 删除回调函数
 
   private navigateToDetail() {
     router.pushUrl({
@@ -14,6 +15,27 @@ export struct UserListItem {
         isEdit: true
       }
     });
+  }
+
+  // 删除按钮的构建器
+  @Builder
+  deleteButton() {
+    Row() {
+      Text('删除')
+        .fontSize(16)
+        .fontColor('#FFFFFF')
+        .fontWeight(FontWeight.Medium)
+    }
+    .justifyContent(FlexAlign.Center)
+    .alignItems(VerticalAlign.Center)
+    .width(80)
+    .height('100%')
+    .backgroundColor('#FF3B30')
+    .onClick(() => {
+      if (this.onDelete) {
+        this.onDelete(this.user);
+      }
+    })
   }
 
   build() {
@@ -67,5 +89,6 @@ export struct UserListItem {
         this.navigateToDetail();
       })
     }
+    .swipeAction({ end: this.deleteButton() })
   }
 }
