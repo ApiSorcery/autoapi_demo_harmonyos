@@ -14,10 +14,10 @@ export const addUser = base.createJsonRequest<Model.UserAddRequestDto,number>((d
 /**
  * Batch export users (Excel)
  */
-export const exportUsers = base.createDownloadRequest<Model.ExportUsersRequest>((req) => ({
+export const exportUsers = base.createDownloadRequest<Model.ExportUsersRequest>((params) => ({
   url: `/user/export`,
   method: 'GET',
-  params: {'code': req.code,'name': req.name,'email': req.email},
+  params,
 }))
 
 /**
@@ -57,8 +57,8 @@ export const removeUser = base.createJsonRequest<Model.RemoveUserRequest>((req) 
 /**
  * Validate if user code exists
  */
-export const validateCode = base.createJsonRequest<Model.ValidateCodeRequest,boolean>((req) => ({
+export const validateCode = base.createJsonRequest<Model.ValidateCodeRequest,boolean>((params) => ({
   url: `/user/validateCode`,
   method: 'GET',
-  params: {'code': req.code},
+  params,
 }))
