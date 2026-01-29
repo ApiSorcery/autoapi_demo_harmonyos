@@ -1,7 +1,7 @@
 // Axios 全局实例封装
 import axios, { AxiosInstance } from '@ohos/axios';
-import { registerRequestInterceptors } from '../../interceptors/request';
-import { registerResponseInterceptors } from '../../interceptors/response';
+import { registerRequestInterceptors } from '../interceptors/request';
+import { registerResponseInterceptors } from '../interceptors/response';
 
 // 基础配置，可按需放到环境配置中
 const requestClient: AxiosInstance = axios.create({
