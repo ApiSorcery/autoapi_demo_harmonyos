@@ -1,5 +1,5 @@
 import type { AxiosRequestConfig } from '@ohos/axios'
-import type { BlobResp } from './model'
+import type { BlobResp } from './httpClient/types/axios'
 import jsonRequest from './httpClient/requests/json'
 import blobRequest from './httpClient/requests/blob'
 

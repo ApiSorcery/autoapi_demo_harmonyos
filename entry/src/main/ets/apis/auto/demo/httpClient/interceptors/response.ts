@@ -1,6 +1,6 @@
 // 统一响应拦截器注册入口
 import { AxiosInstance, AxiosResponse } from '@ohos/axios';
-import { BlobResp } from '../../model';
+import { BlobResp } from '../types/axios';
 
 /**
  * 注册通用响应拦截器：
