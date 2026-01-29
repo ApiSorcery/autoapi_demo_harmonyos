@@ -2,7 +2,7 @@ import * as ApiUser from '../apis/auto/demo/ApiUser';
 import router from '@ohos.router';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
-import promptAction from '@ohos.promptAction';
+import { promptAction } from '@kit.ArkUI';
 import { fileUri } from '@kit.CoreFileKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
@@ -95,6 +95,8 @@ struct Index {
    * 调用后端接口获取二进制并写入到应用文件目录
    */
   private async handleExport() {
+    const uiContext = this.getUIContext();
+    const prompt = uiContext.getPromptAction();
     try {
       this.exporting = true;
       // 触发下载请求；后端若为空字符串则忽略筛选
@@ -106,12 +108,12 @@ struct Index {
 
       if (!resp || !resp.data) {
         console.warn('导出失败：响应为空');
-        promptAction.showToast({ message: '导出失败' });
+        prompt.showToast({ message: '导出失败' });
         return;
       }
 
       // 获取上下文文件目录；若不可用使用标准内部存储路径兜底
-      const context = getContext(this) as common.UIAbilityContext;
+      const context = uiContext.getHostContext();
       const baseDir = (context && (context.filesDir || context.cacheDir)) ?? '/data/storage/el2/base/files';
       const safeName = (resp.name || 'users.xlsx').replace(/[\\\/]/g, '_');
       const filePath = baseDir + '/' + safeName;
@@ -125,7 +127,7 @@ struct Index {
         this.exportedFileName = safeName;
 
         // 显示成功对话框，提供打开文件选项
-        promptAction.showDialog({
+        prompt.showDialog({
           title: '导出成功',
           message: `文件已保存至:\n${filePath}`,
           buttons: [
@@ -142,7 +144,7 @@ struct Index {
         });
       } catch (writeErr) {
         console.error('写入导出文件失败:', JSON.stringify(writeErr));
-        promptAction.showToast({ message: '文件写入失败' });
+        prompt.showToast({ message: '文件写入失败' });
       } finally {
         if (file) {
           try {
@@ -154,7 +156,7 @@ struct Index {
       }
     } catch (e) {
       console.error('导出异常:', JSON.stringify(e));
-      promptAction.showToast({ message: '导出异常' });
+      prompt.showToast({ message: '导出异常' });
     } finally {
       this.showActions = false;
       this.exporting = false;
@@ -165,13 +167,15 @@ struct Index {
    * 打开最近导出的文件
    */
   private async openExportedFile() {
+    const uiContext = this.getUIContext();
+    const prompt = uiContext.getPromptAction();
     if (!this.exportedFilePath) {
-      promptAction.showToast({ message: '没有可打开的文件' });
+      prompt.showToast({ message: '没有可打开的文件' });
       return;
     }
 
     try {
-      const context = getContext(this) as common.UIAbilityContext;
+      const context = uiContext.getHostContext() as common.UIAbilityContext;
       const uri = fileUri.getUriFromPath(this.exportedFilePath);
 
       // 尝试方式1: 使用具体的 Excel MIME type
@@ -225,7 +229,7 @@ struct Index {
         message = `打开文件失败 (错误码: ${errCode})`;
       }
 
-      promptAction.showToast({
+      prompt.showToast({
         message: message,
         duration: 3000
       });
@@ -236,9 +240,11 @@ struct Index {
    * 删除用户
    */
   private async handleDelete(user: UserInfoDto) {
+    const uiContext = this.getUIContext();
+    const prompt = uiContext.getPromptAction();
     try {
       // 显示确认对话框
-      const result = await promptAction.showDialog({
+      const result = await prompt.showDialog({
         title: '确认删除',
         message: `确定要删除用户 "${user.name}" 吗？此操作不可恢复。`,
         buttons: [
@@ -252,7 +258,7 @@ struct Index {
         this.deleting = true;
         try {
           await ApiUser.removeUser({ id: user.id });
-          promptAction.showToast({ message: '删除成功' });
+          prompt.showToast({ message: '删除成功' });
 
           // 从列表中移除该用户
           this.users = this.users.filter(u => u.id !== user.id);
@@ -265,7 +271,7 @@ struct Index {
           }
         } catch (err) {
           console.error('删除用户失败:', JSON.stringify(err));
-          promptAction.showToast({ message: '删除失败，请稍后重试' });
+          prompt.showToast({ message: '删除失败，请稍后重试' });
         } finally {
           this.deleting = false;
         }
