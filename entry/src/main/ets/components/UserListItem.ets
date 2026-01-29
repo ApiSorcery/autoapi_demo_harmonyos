@@ -1,6 +1,7 @@
-import { UserInfoDto } from '../types/UserApiTypes';
+
 import dateUtil from '../utils/DateUtil';
 import router from '@ohos.router';
+import { UserInfoDto } from '../apis/auto/demo/model';
 
 @Component
 export struct UserListItem {

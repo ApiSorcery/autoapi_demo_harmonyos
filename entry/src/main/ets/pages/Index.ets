@@ -5,11 +5,11 @@ import common from '@ohos.app.ability.common';
 import promptAction from '@ohos.promptAction';
 import { fileUri } from '@kit.CoreFileKit';
 import { BusinessError } from '@kit.BasicServicesKit';
-import { GetUserPagedResponse, UserInfoDto, UserPageQueryDto } from '../types/UserApiTypes';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
 import { UserListItem } from '../components/UserListItem';
 import { ListFooterStatus } from '../components/ListFooterStatus';
 import { Want } from '@kit.AbilityKit';
+import { GetUserPagedResponse, UserInfoDto, UserPageQueryDto } from '../apis/auto/demo/model';
 
 @Entry
 @Component
