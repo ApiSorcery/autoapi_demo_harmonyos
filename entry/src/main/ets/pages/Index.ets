@@ -32,8 +32,7 @@ struct Index {
   // 导出状态
   @State exporting: boolean = false; // 是否正在导出
   // 最近导出的文件信息（用于打开文件）
-  private exportedFilePath: string = '';
-  private exportedFileName: string = '';
+  @State exportedFilePath: string = '';
   // 删除状态
   @State deleting: boolean = false; // 是否正在删除
 
@@ -124,7 +123,6 @@ struct Index {
         await fs.write(file.fd, resp.data);
         console.info('用户数据已导出: ' + filePath);
         this.exportedFilePath = filePath;
-        this.exportedFileName = safeName;
 
         // 显示成功对话框，提供打开文件选项
         prompt.showDialog({
