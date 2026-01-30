@@ -3,7 +3,8 @@ import fs from '@ohos.file.fs';
 // 文件读取失败原因枚举
 export enum FileReadFailReason {
   EMPTY_FILE = 'EMPTY_FILE',
-  FILE_TOO_LARGE = 'FILE_TOO_LARGE'
+  FILE_TOO_LARGE = 'FILE_TOO_LARGE',
+  READ_ERROR = 'READ_ERROR'
 }
 
 // 文件读取结果类型别名，统一复用
@@ -72,7 +73,19 @@ class FileUtil {
    */
   static async readFileWithinLimit(file: fs.File, maxFileSizeBytes: number): Promise<FileReadResult> {
     const buffer = new ArrayBuffer(maxFileSizeBytes);
-    const bytesRead: number = await fs.read(file.fd, buffer);
+    let bytesRead: number;
+    try {
+      bytesRead = await fs.read(file.fd, buffer);
+    } catch (err) {
+      console.error('文件读取失败:', err);
+      return {
+        ok: false,
+        bytesRead: 0,
+        data: null,
+        reason: FileReadFailReason.READ_ERROR
+      };
+    }
+    
     const sizeKB = Math.round(bytesRead / 1024);
     console.info('实际读取字节数:', bytesRead, '(' + sizeKB + 'KB)');
     if (bytesRead === 0) {

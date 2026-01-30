@@ -71,7 +71,11 @@ struct UserDetail {
       }
     } catch (e) {
       console.error('加载用户数据失败:', JSON.stringify(e));
-      prompt.showToast({ message: '加载用户数据失败' });
+      try {
+        prompt.showToast({ message: '加载用户数据失败' });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
     }
   }
 
@@ -269,7 +273,11 @@ struct UserDetail {
 
     // 如果正在上传头像，提示用户等待
     if (this.isUploadingAvatar) {
-      prompt.showToast({ message: '请等待头像上传完成' });
+      try {
+        prompt.showToast({ message: '请等待头像上传完成' });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
       return;
     }
 
@@ -289,7 +297,11 @@ struct UserDetail {
           avatar: this.avatar
         };
         await ApiUser.modifyUser(request);
-        prompt.showToast({ message: '用户修改成功' });
+        try {
+          prompt.showToast({ message: '用户修改成功' });
+        } catch (toastErr) {
+          console.error('显示提示失败:', toastErr);
+        }
       } else {
         // 新增用户
         const request: UserAddRequestDto = {
@@ -303,7 +315,11 @@ struct UserDetail {
         };
         const userId = await ApiUser.addUser(request);
         if (userId) {
-          prompt.showToast({ message: '用户创建成功' });
+          try {
+            prompt.showToast({ message: '用户创建成功' });
+          } catch (toastErr) {
+            console.error('显示提示失败:', toastErr);
+          }
         }
       }
       // 保存成功后返回列表页
@@ -312,9 +328,13 @@ struct UserDetail {
       }, 500);
     } catch (e) {
       console.error('保存用户失败:', JSON.stringify(e));
-      prompt.showToast({
-        message: this.isEditMode ? '修改用户失败' : '创建用户失败' 
-      });
+      try {
+        prompt.showToast({
+          message: this.isEditMode ? '修改用户失败' : '创建用户失败' 
+        });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
     } finally {
       this.isSaving = false;
     }

@@ -107,7 +107,11 @@ struct Index {
 
       if (!resp || !resp.data) {
         console.warn('导出失败：响应为空');
-        prompt.showToast({ message: '导出失败' });
+        try {
+          prompt.showToast({ message: '导出失败' });
+        } catch (toastErr) {
+          console.error('显示提示失败:', toastErr);
+        }
         return;
       }
 
@@ -142,7 +146,11 @@ struct Index {
         });
       } catch (writeErr) {
         console.error('写入导出文件失败:', JSON.stringify(writeErr));
-        prompt.showToast({ message: '文件写入失败' });
+        try {
+          prompt.showToast({ message: '文件写入失败' });
+        } catch (toastErr) {
+          console.error('显示提示失败:', toastErr);
+        }
       } finally {
         if (file) {
           try {
@@ -154,7 +162,11 @@ struct Index {
       }
     } catch (e) {
       console.error('导出异常:', JSON.stringify(e));
-      prompt.showToast({ message: '导出异常' });
+      try {
+        prompt.showToast({ message: '导出异常' });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
     } finally {
       this.showActions = false;
       this.exporting = false;
@@ -168,7 +180,11 @@ struct Index {
     const uiContext = this.getUIContext();
     const prompt = uiContext.getPromptAction();
     if (!this.exportedFilePath) {
-      prompt.showToast({ message: '没有可打开的文件' });
+      try {
+        prompt.showToast({ message: '没有可打开的文件' });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
       return;
     }
 
@@ -227,10 +243,14 @@ struct Index {
         message = `打开文件失败 (错误码: ${errCode})`;
       }
 
-      prompt.showToast({
-        message: message,
-        duration: 3000
-      });
+      try {
+        prompt.showToast({
+          message: message,
+          duration: 3000
+        });
+      } catch (toastErr) {
+        console.error('显示提示失败:', toastErr);
+      }
     }
   }
 
@@ -256,7 +276,11 @@ struct Index {
         this.deleting = true;
         try {
           await ApiUser.removeUser({ id: user.id });
-          prompt.showToast({ message: '删除成功' });
+          try {
+            prompt.showToast({ message: '删除成功' });
+          } catch (toastErr) {
+            console.error('显示提示失败:', toastErr);
+          }
 
           // 从列表中移除该用户
           this.users = this.users.filter(u => u.id !== user.id);
@@ -269,7 +293,11 @@ struct Index {
           }
         } catch (err) {
           console.error('删除用户失败:', JSON.stringify(err));
-          prompt.showToast({ message: '删除失败，请稍后重试' });
+          try {
+            prompt.showToast({ message: '删除失败，请稍后重试' });
+          } catch (toastErr) {
+            console.error('显示提示失败:', toastErr);
+          }
         } finally {
           this.deleting = false;
         }
