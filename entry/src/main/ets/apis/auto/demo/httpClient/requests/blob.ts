@@ -1,4 +1,3 @@
-// Axios 全局实例封装
 import axios, { AxiosInstance } from '@ohos/axios';
 import { registerRequestInterceptors } from '../interceptors/request';
 import { registerResponseInterceptors } from '../interceptors/response';

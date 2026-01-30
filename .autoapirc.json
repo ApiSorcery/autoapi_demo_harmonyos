@@ -14,7 +14,8 @@
       "source": "https://apisorcery.com/demo-api/swagger-json",
       "returnLevel": "second",
       "returnSecondField": "data",
-      "baseStrategy": "always"
+      "baseStrategy": "once",
+      "httpClientStrategy": "once"
     }
   ]
 }
