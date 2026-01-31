@@ -1,8 +1,6 @@
 import * as ApiUser from '../apis/auto/demo/ApiUser';
-import router from '@ohos.router';
 import fs from '@ohos.file.fs';
 import common from '@ohos.app.ability.common';
-import { promptAction } from '@kit.ArkUI';
 import { fileUri } from '@kit.CoreFileKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { UserSearchDrawer } from '../components/UserSearchDrawer';
@@ -435,11 +433,13 @@ struct Index {
               .padding({ top: 18, bottom: 18 })
               .onClick(() => {
                 this.showActions = false;
-                router.pushUrl({
+                this.getUIContext().getRouter().pushUrl({
                   url: 'pages/UserDetail',
                   params: {
                     isEdit: false
                   }
+                }).catch(() => {
+                  // handle error
                 });
               })
             Divider().color('#E8E8EC').height(1)

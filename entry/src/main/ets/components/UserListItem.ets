@@ -1,6 +1,4 @@
-
 import dateUtil from '../utils/DateUtil';
-import router from '@ohos.router';
 import { UserInfoDto } from '../apis/auto/demo/model';
 
 @Component
@@ -9,12 +7,14 @@ export struct UserListItem {
   onDelete?: (user: UserInfoDto) => void; // 删除回调函数
 
   private navigateToDetail() {
-    router.pushUrl({
+    this.getUIContext().getRouter().pushUrl({
       url: 'pages/UserDetail',
       params: {
         userId: this.user.id,
         isEdit: true
       }
+    }).catch(() => {
+      // handle error
     });
   }
 

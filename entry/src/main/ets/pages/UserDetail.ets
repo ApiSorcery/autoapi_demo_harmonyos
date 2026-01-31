@@ -1,4 +1,3 @@
-import router from '@ohos.router';
 import fs from '@ohos.file.fs';
 // 图片选择相关
 import photoAccessHelper from '@ohos.file.photoAccessHelper';
@@ -10,7 +9,6 @@ import { Permissions } from '@kit.AbilityKit';
 import * as ApiUser from '../apis/auto/demo/ApiUser';
 import * as ApiFile from '../apis/auto/demo/ApiFile';
 import fileUtil, { FileReadFailReason, FileReadResult } from '../utils/FileUtil';
-import { FormData } from '@ohos/axios';
 import { UploadFileRequest, UserAddRequestDto, UserModifyRequestDto } from '../apis/auto/demo/model';
 
 @Entry
@@ -41,11 +39,11 @@ struct UserDetail {
 
   aboutToAppear() {
     // 从路由参数中获取用户信息
-    const params = router.getParams() as Record<string, Object>;
+    const params = this.getUIContext().getRouter().getParams() as Record<string, Object>;
     if (params) {
       this.isEditMode = params['isEdit'] as boolean || false;
       this.userId = params['userId'] as number || 0;
-      
+
       if (this.isEditMode && this.userId) {
         this.loadUserData();
       }
@@ -216,7 +214,7 @@ struct UserDetail {
   }
 
   private goBack() {
-    router.back();
+    this.getUIContext().getRouter().back();
   }
 
   /**
@@ -324,13 +322,13 @@ struct UserDetail {
       }
       // 保存成功后返回列表页
       setTimeout(() => {
-        router.back();
+        this.getUIContext().getRouter().back();
       }, 500);
     } catch (e) {
       console.error('保存用户失败:', JSON.stringify(e));
       try {
         prompt.showToast({
-          message: this.isEditMode ? '修改用户失败' : '创建用户失败' 
+          message: this.isEditMode ? '修改用户失败' : '创建用户失败'
         });
       } catch (toastErr) {
         console.error('显示提示失败:', toastErr);
@@ -625,6 +623,7 @@ struct UserDetail {
                 this.saveUser();
               }
             })
+
             Divider().color('#E8E8EC').height(1)
             // 选项：Export
             Text('Cancel')
