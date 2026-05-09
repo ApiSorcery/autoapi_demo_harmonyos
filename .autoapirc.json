@@ -8,12 +8,7 @@
     {
       "code": "demo",
       "source": "https://apisorcery.com/demo-api/swagger-json",
-      "version": 3,
-      "enabled": true,
-      "returnLevel": "second",
-      "returnSecondField": "data",
-      "baseStrategy": "once",
-      "httpClientStrategy": "once"
+      "version": 3
     }
   ]
 }
