@@ -2,7 +2,7 @@
   modelVersion: '5.0.5',
   description: 'Please describe the basic information.',
   scripts: {
-    swagger: 'autoapi generate',
+    swagger: 'apisorcery generate',
   },
   dependencies: {},
   devDependencies: {

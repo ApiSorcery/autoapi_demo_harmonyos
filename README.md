@@ -86,7 +86,7 @@ autoapi_demo_harmonyos/
 │   └── app.json5                  # App configuration
 ├── hvigor/                        # Build tool
 ├── oh_modules/                    # Dependencies
-├── .autoapirc.json                # AutoAPI configuration
+├── .apisorceryrc.json                # AutoAPI configuration
 ├── build-profile.json5            # Project build config
 ├── hvigorfile.ts                  # Build script
 └── oh-package.json5               # Dependencies
@@ -94,7 +94,7 @@ autoapi_demo_harmonyos/
 
 ## API Configuration
 
-The application uses AutoAPI to generate type-safe API client code. Configuration is in `.autoapirc.json`:
+The application uses AutoAPI to generate type-safe API client code. Configuration is in `.apisorceryrc.json`:
 
 ```json
 {
